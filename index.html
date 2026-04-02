@@ -1,0 +1,3353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bingo Mr Synthèse</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{min-height:100%}
+body{min-height:100vh;background:#1a2e1a;background-image:radial-gradient(ellipse at 20% 20%,#1e3d1e 0%,#0f1f0f 100%);font-family:'Segoe UI',sans-serif;color:#f0e8c8;}
+input{background:rgba(255,255,255,0.08);border:1.5px solid rgba(247,201,72,0.4);border-radius:8px;color:#f0e8c8;font-size:1rem;padding:0.75rem 1rem;outline:none;transition:border-color 0.2s;width:100%;}
+input:focus{border-color:#f7c948}input::placeholder{color:rgba(240,232,200,0.35)}
+.btn{background:#f7c948;color:#1a2e1a;border:none;border-radius:8px;font-weight:700;font-size:1rem;padding:0.75rem 1.5rem;cursor:pointer;transition:transform 0.1s,opacity 0.15s;display:inline-block;}
+.btn:hover{opacity:.88;transform:translateY(-1px)}.btn:active{transform:translateY(0)}.btn:disabled{cursor:not-allowed;opacity:.35;transform:none}
+.btn-ghost{background:transparent;border:1.5px solid rgba(240,232,200,0.3);border-radius:8px;color:rgba(240,232,200,0.7);padding:0.75rem 1.5rem;cursor:pointer;font-size:1rem;font-weight:600;transition:border-color 0.2s,color 0.2s;}
+.btn-ghost:hover{border-color:rgba(247,201,72,0.5);color:#f7c948}
+.back-btn{background:transparent;border:1.5px solid rgba(240,232,200,0.3);border-radius:6px;color:rgba(240,232,200,0.7);padding:0.4rem 0.85rem;cursor:pointer;font-size:0.85rem;transition:border-color 0.2s,color 0.2s;}
+.back-btn:hover{border-color:rgba(247,201,72,0.5);color:#f7c948}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(247,201,72,0.25);border-radius:3px}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+@keyframes popIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 10px rgba(255,34,0,0.4),0 0 18px rgba(255,34,0,0.2)}50%{box-shadow:0 0 20px rgba(255,34,0,0.7),0 0 35px rgba(255,34,0,0.4)}}
+@keyframes pulse-orange{0%,100%{box-shadow:0 0 10px rgba(255,119,0,0.4),0 0 18px rgba(255,119,0,0.2)}50%{box-shadow:0 0 20px rgba(255,119,0,0.7),0 0 35px rgba(255,119,0,0.4)}}
+@keyframes pulse-yellow{0%,100%{box-shadow:0 0 10px rgba(255,204,0,0.4),0 0 18px rgba(255,204,0,0.2)}50%{box-shadow:0 0 20px rgba(255,204,0,0.7),0 0 35px rgba(255,204,0,0.4)}}
+@keyframes pulse-blue{0%,100%{box-shadow:0 0 10px rgba(0,170,255,0.4),0 0 18px rgba(0,170,255,0.2)}50%{box-shadow:0 0 20px rgba(0,170,255,0.7),0 0 35px rgba(0,170,255,0.4)}}
+@keyframes flameBounce{from{transform:translateX(-50%) translateY(0)}to{transform:translateX(-50%) translateY(-5px)}}
+@keyframes stamp{from{transform:translate(-50%,-50%) rotate(-15deg) scale(2.2);opacity:0}to{transform:translate(-50%,-50%) rotate(-15deg) scale(1);opacity:1}}
+@keyframes slideDown{from{transform:translateX(-50%) translateY(-24px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+@keyframes winnerPop{0%{transform:scale(0.5) rotate(-5deg);opacity:0}60%{transform:scale(1.1) rotate(2deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes freezePulse{0%,100%{box-shadow:inset 0 0 0 1px rgba(92,200,224,0.42),0 0 10px rgba(92,200,224,0.18)}50%{box-shadow:inset 0 0 0 1px rgba(92,200,224,0.85),0 0 20px rgba(92,200,224,0.42)}}
+@keyframes slideInLeft{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideInRight{from{transform:translateX(-60px);opacity:0}to{transform:translateX(0);opacity:1}}
+.tab-slide-left{animation:slideInLeft 0.25s cubic-bezier(0.25,0.46,0.45,0.94)}
+.tab-slide-right{animation:slideInRight 0.25s cubic-bezier(0.25,0.46,0.45,0.94)}
+@keyframes freezeWave{0%{transform:translateX(-110%)}100%{transform:translateX(110%)}}
+@keyframes freezeFlake{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(540deg);opacity:0}}
+@keyframes powerFlash{0%{opacity:0}15%{opacity:1}85%{opacity:1}100%{opacity:0}}
+/* Shuffle - trou noir */
+@keyframes vortexSuck{0%{transform:translate(-50%,-50%) scale(0);opacity:0}20%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{transform:translate(-50%,-50%) scale(1.1);opacity:0.9}100%{transform:translate(-50%,-50%) scale(0.05);opacity:0}}
+@keyframes vortexRing{0%{transform:translate(-50%,-50%) scale(0.2) rotate(0deg);opacity:0}30%{opacity:0.8}100%{transform:translate(-50%,-50%) scale(2.5) rotate(360deg);opacity:0}}
+@keyframes vortexPull{0%{transform:translate(-50%,-50%) scale(1) rotate(0deg);opacity:1}100%{transform:translate(-50%,-50%) scale(0) rotate(720deg);opacity:0}}
+/* Shield - reflet diagonal */
+@keyframes shieldAppear{0%{transform:translate(-50%,-50%) scale(0.3) rotate(-20deg);opacity:0}50%{transform:translate(-50%,-50%) scale(1.15) rotate(3deg);opacity:1}75%{transform:translate(-50%,-50%) scale(0.95) rotate(-1deg)}100%{transform:translate(-50%,-50%) scale(1) rotate(0deg);opacity:1}}
+@keyframes shieldShine{0%{transform:translate(-150%,-150%) rotate(45deg)}100%{transform:translate(250%,250%) rotate(45deg)}}
+@keyframes shieldPulse{0%,100%{box-shadow:0 0 0 0 rgba(247,201,72,0)}50%{box-shadow:0 0 60px 20px rgba(247,201,72,0.35)}}
+/* Sabotage - troll */
+@keyframes trollBounce{0%,100%{transform:translate(-50%,-50%) scale(1) rotate(-3deg)}25%{transform:translate(-50%,-50%) scale(1.08) rotate(3deg)}75%{transform:translate(-50%,-50%) scale(0.96) rotate(-2deg)}}
+@keyframes trollEntry{0%{transform:translate(-50%,-50%) scale(0) rotate(-20deg);opacity:0}60%{transform:translate(-50%,-50%) scale(1.1) rotate(5deg);opacity:1}100%{transform:translate(-50%,-50%) scale(1) rotate(-3deg);opacity:1}}
+@keyframes petardSpin{0%{transform:translate(-50%,-50%) rotate(0deg) scale(1)}100%{transform:translate(-50%,-50%) rotate(720deg) scale(0);opacity:0}}
+@keyframes petardBoom{0%{transform:translate(-50%,-50%) scale(0);opacity:0}40%{transform:translate(-50%,-50%) scale(1.8);opacity:1}100%{transform:translate(-50%,-50%) scale(3);opacity:0}}
+/* Bombe */
+@keyframes bombShake{0%,100%{transform:translate(0,0)}10%{transform:translate(-6px,-4px)}20%{transform:translate(6px,4px)}30%{transform:translate(-5px,3px)}40%{transform:translate(5px,-3px)}50%{transform:translate(-4px,4px)}60%{transform:translate(4px,-4px)}70%{transform:translate(-3px,2px)}80%{transform:translate(3px,-2px)}90%{transform:translate(-2px,1px)}}
+@keyframes bombFlash{0%{opacity:0}30%{opacity:0.6}50%{opacity:0}70%{opacity:0.3}100%{opacity:0}}
+/* Ciblage */
+@keyframes targetSpin{0%{transform:translate(-50%,-50%) scale(0) rotate(-180deg);opacity:0}50%{transform:translate(-50%,-50%) scale(1.1) rotate(10deg);opacity:1}75%{transform:translate(-50%,-50%) scale(0.95) rotate(-5deg)}100%{transform:translate(-50%,-50%) scale(1) rotate(0deg);opacity:1}}
+@keyframes targetPing{0%{transform:translate(-50%,-50%) scale(1);opacity:0.8}100%{transform:translate(-50%,-50%) scale(2.8);opacity:0}}
+@keyframes targetScan{0%{top:0%}100%{top:100%}}
+@keyframes ghostScream{0%{transform:translate(-50%,-50%) scale(0.1) rotate(-15deg);opacity:0}8%{transform:translate(-50%,-50%) scale(1.25) rotate(4deg);opacity:1}15%{transform:translate(-50%,-50%) scale(0.95) rotate(-2deg);opacity:1}22%{transform:translate(-50%,-50%) scale(1.05) rotate(1deg);opacity:1}85%{transform:translate(-50%,-50%) scale(1.02) rotate(0deg);opacity:1}100%{transform:translate(-50%,-50%) scale(1.5) rotate(5deg);opacity:0}}
+@keyframes ghostScreenCover{0%{opacity:0}6%{opacity:1}85%{opacity:0.97}100%{opacity:0}}
+@keyframes ghostFlicker{0%,100%{opacity:1}50%{opacity:0.85}75%{opacity:0.95}}
+@keyframes ghostEye{0%,100%{transform:scaleY(1)}40%,60%{transform:scaleY(0.05)}}
+@keyframes ghostWobble{0%,100%{transform:translate(-50%,-50%) rotate(-3deg) scaleX(1)}33%{transform:translate(-50%,-50%) rotate(3deg) scaleX(0.96)}66%{transform:translate(-50%,-50%) rotate(-1deg) scaleX(1.04)}}
+@keyframes ghostTextFlash{0%,100%{opacity:0}10%,90%{opacity:1}50%{opacity:0.8}}
+@keyframes trapSnap{0%{transform:translate(-50%,-50%) scale(0) rotate(-30deg);opacity:0}40%{transform:translate(-50%,-50%) scale(1.2) rotate(10deg);opacity:1}60%{transform:translate(-50%,-50%) scale(0.9) rotate(-5deg)}80%{transform:translate(-50%,-50%) scale(1.05) rotate(2deg)}100%{transform:translate(-50%,-50%) scale(1) rotate(0deg);opacity:1}}
+@keyframes trapShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}}
+@keyframes trapSpark{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
+</style>
+</head>
+<body>
+<div id="root"><div style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1rem;font-family:'Segoe UI',sans-serif;color:#f7c948;"><div style="font-size:3rem;animation:spin 1.2s linear infinite">🎲</div><div style="font-size:1.1rem;font-weight:700;letter-spacing:0.15em">Bingo Mr Synth&#232;se</div><div style="font-size:0.8rem;color:rgba(240,232,200,0.45)">Chargement...</div></div></div>
+<style>#root>div{animation:fadeIn 0.2s ease}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}</style>
+<script type="text/babel" charset="utf-8">
+const {useState, useEffect, useCallback, useRef} = React;
+
+// ================================================================
+//  FIREBASE CONFIG
+// ================================================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDUpWaklXCc-OMg9iCR_16h6w_AgwTRCDk",
+  authDomain: "bingo-prof.firebaseapp.com",
+  databaseURL: "https://bingo-prof-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "bingo-prof",
+  storageBucket: "bingo-prof.firebasestorage.app",
+  messagingSenderId: "76376761057",
+  appId: "1:76376761057:web:97ed801afde5743e900da0"
+};
+
+const IS_CONFIGURED = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+let db = null;
+if (IS_CONFIGURED) {
+  try { firebase.initializeApp(FIREBASE_CONFIG); db = firebase.database(); }
+  catch(e) { console.error(e); }
+}
+
+// ================================================================
+//  MOTS DU JEU
+// ================================================================
+const INITIAL_BTS_REFS = [
+  "Guenille", "Confère synthèse", "Jeux débile", "Rigueur", "Non de Dieu !",
+  "Serrage de main", "Claquer des doigts", "NON NON NON", "Salaud", "Connard",
+  "Tapage de dos", "Papier biten", "Nouille", "Burne", "Basta",
+  "Fissa", "Fait donc du poly", "Dis donc...", "Seigneur", "Faudra m'expliquer",
+  "Bouge-toi les miches", "Putain la vache", "Gros mimi bisous", "C'est beau l'électrotech",
+  "Mon grand", "Mon garçon", "Fais donc du portable dehors", "Trois chiffres significatifs",
+  "Faire l'autiste", "Serre les mains vers le ciel", "18 ans on vous a torché le Q",
+  "Pour ta gouverne personnelle", "Rendement", "On enchaîne", "Fabrication française",
+  "Les chaises en bascule", "Merci pour le personnel", "La ferme", "Good job",
+  "Je bosse pour...", "Connerie", "Pauvre bichette",
+  "Non d'une pipe", "Pomper le stylo", "Confère mail", "Il est bien ce garçon",
+  "Seat down", "Met moi...", "...French", "Cesse donc de couiner",
+  "Qu'est-ce que tu veux que je bosse", "Vie scolaire"
+];
+const DEFAULT_REFS = INITIAL_BTS_REFS;
+// Liste unique — plus de BTS/BUT
+const getWordPool = lists => {
+  const safeLists = lists || {};
+  return safeLists.bts&&safeLists.bts.length ? safeLists.bts : INITIAL_BTS_REFS;
+};
+
+const GAME_NAME = "Bingo Mr Synthèse";
+const EXCLUDED_PLAYERS = ["teste", "teste2"]; // noms en minuscules
+const LAB_USERS = ["enzo", "matys"]; // joueurs ayant acces au laboratoire
+const DIFFICULTY_CONFIGS = {
+  easy: {label:"Facile", size:3},
+  medium: {label:"Moyen", size:4},
+  normal: {label:"Normal", size:5}
+};
+const DIFFICULTY_ORDER = ["easy","medium","normal"];
+const DIFFICULTY_WIN_KEYS = {
+  easy: "winsEasy",
+  medium: "winsMedium",
+  normal: "winsNormal"
+};
+
+const LINE_PHRASES = [
+  "Tu as du retard sur les autres !",
+  "Une ligne... c'est un début !",
+  "Même Mr Synthèse est impressionné (un peu).",
+  "Allez, continue comme ça !",
+  "Belle ligne ! Maintenant fais-en une autre.",
+  "Ça commence à sentir la pression pour les autres.",
+  "Une ligne de plus et ça va paniquer sévère.",
+  "Tu chauffes, continue comme ça !",
+  "Ligne validée, les autres tremblent déjà.",
+  "Ça devient sérieux là.",
+  "Encore une ligne comme ça et ça sent le drame.",
+  "Tu leur mets une belle pression.",
+  "Pas mal du tout, continue comme un sauvage."
+];
+
+const COL_PHRASES = [
+  "Ah je te vois dans le rétro !",
+  "Colonne complète, t'as intérêt à continuer.",
+  "Verticalement supérieur aux autres !",
+  "Une colonne ! Il commence à flipper Mr Synthèse.",
+  "Ça monte, ça monte... comme le niveau !",
+  "Belle colonne, c'est bien propre ça.",
+  "Ça grimpe fort là.",
+  "Colonne bouclée, la course se resserre.",
+  "Encore une et ça va devenir très moche pour eux.",
+  "Ça leur passe juste sous le nez.",
+  "Verticalement, tu fais le ménage.",
+  "Ils te regardent monter sans pouvoir suivre.",
+  "Belle colonne, bien sale pour les autres."
+];
+const getDifficultyConfig = difficulty => DIFFICULTY_CONFIGS[difficulty] || DIFFICULTY_CONFIGS.normal;
+const getDifficultyWinKey = difficulty => DIFFICULTY_WIN_KEYS[difficulty] || DIFFICULTY_WIN_KEYS.normal;
+const getBoardSize = sessionData => getDifficultyConfig(sessionData&&sessionData.difficulty).size;
+const getFreeIndex = size => size===5 ? Math.floor((size*size)/2) : null;
+const getTotalCells = size => size*size;
+const getCompletionTarget = size => getTotalCells(size);
+
+const buildLines = size => {
+  const lines = [];
+  for (let row = 0; row < size; row++) {
+    lines.push({cells:Array.from({length:size},(_,col)=>row*size+col), type:"ligne"});
+  }
+  for (let col = 0; col < size; col++) {
+    lines.push({cells:Array.from({length:size},(_,row)=>row*size+col), type:"colonne"});
+  }
+  lines.push({cells:Array.from({length:size},(_,i)=>i*(size+1)), type:"diagonale"});
+  lines.push({cells:Array.from({length:size},(_,i)=>(i+1)*(size-1)), type:"diagonale"});
+  return lines;
+};
+
+const getLines = (ms, size) => buildLines(size).filter(l => l.cells.every(i => ms.has(i)));
+
+const shuffle = a => {
+  const b = [...a];
+  for (let i = b.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [b[i],b[j]] = [b[j],b[i]];
+  }
+  return b;
+};
+
+const genCard = (refs, size) => {
+  const total = getTotalCells(size);
+  const freeIndex = getFreeIndex(size);
+  const neededRefs = freeIndex===null ? total : total-1;
+  const pool = refs.length >= neededRefs ? refs : [...refs,...DEFAULT_REFS].filter((v,i,a)=>a.indexOf(v)===i);
+  const p = shuffle(pool).slice(0, neededRefs);
+  if (freeIndex===null) return p;
+  const card = [];
+  let wordIndex = 0;
+  for (let i = 0; i < total; i++) {
+    if (i===freeIndex) card.push("FREE");
+    else card.push(p[wordIndex++]);
+  }
+  return card;
+};
+
+// Génère une grille en respectant les quotas de niveaux de mots
+// Max 1 hard et 1 difficile par grille (mots restants = facile/moyen/sans niveau)
+const genCardWithLevels = (refs, size, wordLevels) => {
+  const total = getTotalCells(size);
+  const freeIndex = getFreeIndex(size);
+  const neededRefs = freeIndex===null ? total : total-1;
+
+  // Fonction qui retourne le niveau d'un mot
+  const getLevel = word => wordLevels[encodeURIComponent(word).replace(/\./g,'%2E')] || null;
+
+  // Si pas de niveaux définis, fallback sur genCard classique
+  const hasAnyLevel = refs.some(w => getLevel(w) !== null);
+  if (!hasAnyLevel) return genCard(refs, size);
+
+  // Séparer les mots par niveau
+  const byLevel = {hard:[], difficile:[], moyen:[], facile:[], none:[]};
+  refs.forEach(w => { const lv = getLevel(w); byLevel[lv||"none"].push(w); });
+
+  // Quotas : max 1 hard, max 1 difficile, le reste = facile/moyen/sans niveau
+  const maxHard = 1;
+  const maxDifficile = 1;
+
+  const pickedHard = shuffle(byLevel.hard).slice(0, maxHard);
+  const pickedDifficile = shuffle(byLevel.difficile).slice(0, maxDifficile);
+  const pickedEasy = shuffle([...byLevel.facile, ...byLevel.moyen, ...byLevel.none]);
+
+  const remaining = neededRefs - pickedHard.length - pickedDifficile.length;
+  const pickedEasySlice = pickedEasy.slice(0, remaining);
+
+  // Si pas assez de mots easy, compléter avec difficult/hard en débordement
+  let pool = [...pickedHard, ...pickedDifficile, ...pickedEasySlice];
+  if (pool.length < neededRefs) {
+    const extra = shuffle([...byLevel.hard, ...byLevel.difficile]).filter(w=>!pool.includes(w));
+    pool = [...pool, ...extra].slice(0, neededRefs);
+  }
+  if (pool.length < neededRefs) {
+    pool = [...pool, ...shuffle(refs).filter(w=>!pool.includes(w))].slice(0, neededRefs);
+  }
+
+  pool = shuffle(pool);
+
+  if (freeIndex===null) return pool;
+  const card = [];
+  let wordIndex = 0;
+  for (let i = 0; i < total; i++) {
+    if (i===freeIndex) card.push("FREE");
+    else card.push(pool[wordIndex++]);
+  }
+  return card;
+};
+
+const genCode = () => Math.random().toString(36).substring(2,8).toUpperCase();
+
+const randFrom = arr => arr[Math.floor(Math.random()*arr.length)];
+const formatDuration = ms => Math.max(1, Math.ceil(ms/1000));
+const isStandardRankedMode = sessionData => getBoardSize(sessionData)===5;
+const getBoardLetters = size => "BINGO".slice(0,size).split("");
+const getWinRate = user => {
+  const games = (user&&user.gamesPlayed) || 0;
+  const wins = (user&&user.wins) || 0;
+  return games ? Math.round((wins/games)*100) : 0;
+};
+const DEFAULT_PLAYER = {
+  name:"",
+  photo:null,
+  wins:0,
+  gamesPlayed:0,
+  streak:0,
+  bestStreak:0,
+  winsEasy:0,
+  winsMedium:0,
+  winsNormal:0
+};
+const normalizePlayer = raw => {
+  const next = {...DEFAULT_PLAYER, ...(raw||{})};
+  if (raw && raw.winsNormal===undefined && raw.wins!==undefined) next.winsNormal = raw.wins;
+  return next;
+};
+const getInitialMarkedSet = size => {
+  const freeIndex = getFreeIndex(size);
+  return freeIndex===null ? new Set() : new Set([freeIndex]);
+};
+const arraysEqual = (a,b) => JSON.stringify(a||[])===JSON.stringify(b||[]);
+const POWER_NOTIFICATION_DELAY = 5500;
+const WORD_LEVEL_OPTIONS = [
+  {key:"facile",   label:"Facile",   color:"#7de08a"},
+  {key:"moyen",    label:"Moyen",    color:"#f7c948"},
+  {key:"difficile",label:"Difficile",color:"#e09a5c"},
+  {key:"hard",     label:"Hard",     color:"#e05c5c"},
+];
+const DURATION_OPTIONS = [
+  {label:"Sans limite", value:null},
+  {label:"30 min",  value:30*60*1000},
+  {label:"1h",      value:60*60*1000},
+  {label:"1h30",    value:90*60*1000},
+  {label:"2h",      value:2*60*60*1000},
+  {label:"2h30",    value:2.5*60*60*1000},
+  {label:"3h",      value:3*60*60*1000},
+  {label:"3h30",    value:3.5*60*60*1000},
+  {label:"4h",      value:4*60*60*1000},
+];
+const POWER_TYPES = ["freeze","shuffle","shield","target","bomb","sabotage","ghost","trap"];
+const OFFENSIVE_POWER_TYPES = ["freeze","shuffle","bomb","sabotage","ghost","trap"];
+const LEADERBOARD_OPTIONS = [
+  {key:"wins", label:"Victoires"},
+  {key:"gamesPlayed", label:"Parties"},
+  {key:"streak", label:"Serie"},
+  {key:"winRate", label:"Taux de victoire"}
+];
+
+function pickRandomIndices(indices, count) {
+  return shuffle(indices).slice(0, Math.max(0, Math.min(count, indices.length)));
+}
+
+function getOtherPlayerNames(sessionData, sourcePlayer) {
+  return Object.keys((sessionData&&sessionData.players)||{}).filter(name=>name!==sourcePlayer);
+}
+
+function getMarkedIndicesForPlayer(sessionData, name) {
+  return Object.keys((((sessionData||{}).marked||{})[name])||{}).map(Number);
+}
+
+function getSelectableMarkedIndices(sessionData, name) {
+  const size = getBoardSize(sessionData);
+  const freeIndex = getFreeIndex(size);
+  return getMarkedIndicesForPlayer(sessionData, name).filter(i=>i!==freeIndex);
+}
+
+function shuffleBoardState(card, markedObj, size) {
+  const total = getTotalCells(size);
+  const freeIndex = getFreeIndex(size);
+  const movableIndices = Array.from({length:total},(_,i)=>i).filter(i=>i!==freeIndex);
+  const items = movableIndices.map(index=>({
+    cell:card[index],
+    marked:!!(markedObj&&markedObj[index])
+  }));
+  const shuffledItems = shuffle(items);
+  const nextCard = [...card];
+  const nextMarked = {};
+  movableIndices.forEach((slotIndex, idx)=>{
+    const item = shuffledItems[idx];
+    nextCard[slotIndex] = item.cell;
+    if (item.marked) nextMarked[slotIndex] = true;
+  });
+  if (freeIndex!==null) nextCard[freeIndex] = "FREE";
+  return {card:nextCard, marked:nextMarked};
+}
+
+function buildFreezeTargets(sessionData, sourcePlayer) {
+  const size = getBoardSize(sessionData);
+  const total = getTotalCells(size);
+  const freeIndex = getFreeIndex(size);
+  const players = Object.keys((sessionData&&sessionData.players)||{}).filter(name=>name!==sourcePlayer);
+  const targets = {};
+  players.forEach(name=>{
+    const markedObj = (sessionData&&sessionData.marked&&sessionData.marked[name]) || {};
+    const markedSet = new Set(Object.keys(markedObj).map(Number));
+    if (freeIndex!==null) markedSet.add(freeIndex);
+    const choices = Array.from({length:total},(_,i)=>i).filter(i=>!markedSet.has(i));
+    if (choices.length>0) targets[name] = randFrom(choices);
+  });
+  return targets;
+}
+
+const TRAP_GAGES = [
+  "Faire dire au prof \"brain roted\"",
+  "Rester debout tant que le prof ne remarque pas",
+  "Serrer la main au prof",
+  "Faire 3 à 5 pompes",
+  "Faire un tour de la salle",
+  "Crier 67",
+  "Faire un selfie avec la personne à ta gauche",
+  "Ranger toutes ses affaires",
+  "Imiter le prof pendant 30 secondes",
+  "Chanter le refrain d'une chanson au choix du groupe",
+  "Faire 20 secondes de danse sans musique",
+  "Parler avec un accent étranger pendant 1 minute",
+  "Faire semblant d'être en direct à la télé et présenter la météo",
+  "Raconter ton moment le plus gênant de l'année",
+  "Faire la planche pendant 20 secondes",
+];
+
+function getAvailablePowerTypes(sessionData, sourcePlayer) {
+  const allOthers = getOtherPlayerNames(sessionData, sourcePlayer);
+  const targetLock = ((sessionData||{}).powerState||{}).targetLock;
+  const others = (targetLock && targetLock.target && targetLock.target!==sourcePlayer && allOthers.includes(targetLock.target))
+    ? [targetLock.target]
+    : allOthers;
+  const freezeTargets = buildFreezeTargets(sessionData, sourcePlayer);
+  const usableFreezeTargets = others.filter(name=>freezeTargets[name]!==undefined);
+  const bombTargets = others.filter(name=>getSelectableMarkedIndices(sessionData, name).length>0);
+  // Ghost et Trap : cases non cochées disponibles (même condition que freeze)
+  const ghostTrapTargets = others.filter(name=>freezeTargets[name]!==undefined);
+  const options = [];
+  if (usableFreezeTargets.length>0) options.push("freeze");
+  if (others.length>0) options.push("shuffle");
+  options.push("shield");
+  if (allOthers.length>0) options.push("target");
+  if (bombTargets.length>0) options.push("bomb","sabotage");
+  if (ghostTrapTargets.length>0) options.push("ghost","trap");
+  return options.length>0 ? options : ["shield"];
+}
+
+function getCompletedLineKeySet(markedSet, size) {
+  return new Set(getLines(markedSet, size).map(line=>line.cells.join("-")));
+}
+
+function getLeaderboardValue(user, sortKey) {
+  if (sortKey==="winRate") return getWinRate(user);
+  return (user&&user[sortKey]) || 0;
+}
+
+function buildSessionSummary(sessionCode, sessionData, winnerName, statBoosts) {
+  const rawStats = (sessionData&&sessionData.stats) || {};
+  const mergedStats = {};
+  Object.keys(rawStats).forEach(name=>{
+    mergedStats[name] = {
+      lineCount: ((rawStats[name]&&rawStats[name].lineCount) || 0)
+    };
+  });
+  Object.entries(statBoosts||{}).forEach(([name, boost])=>{
+    const extra = (boost&&boost.lineCount) || 0;
+    mergedStats[name] = {
+      ...(mergedStats[name]||{lineCount:0}),
+      lineCount: ((mergedStats[name]&&mergedStats[name].lineCount) || 0) + extra
+    };
+  });
+  const players = Object.keys((sessionData&&sessionData.players) || {});
+  const topLinePlayer = players.reduce((best, name)=>{
+    const count = (mergedStats[name]&&mergedStats[name].lineCount) || 0;
+    if (!best) return {name, count};
+    if (count > best.count) return {name, count};
+    if (count===best.count && name.localeCompare(best.name,"fr") < 0) return {name, count};
+    return best;
+  }, null);
+  return {
+    code: sessionCode,
+    winner: winnerName || null,
+    topLinePlayer: topLinePlayer ? topLinePlayer.name : null,
+    topLineCount: topLinePlayer ? topLinePlayer.count : 0,
+    players,
+    difficulty: (sessionData&&sessionData.difficulty) || "normal",
+    powerMode: !!(sessionData&&sessionData.powerMode),
+    endedAt: Date.now()
+  };
+}
+
+
+// Calcule le gagnant quand la partie se termine sans bingo
+// Règles : 1) plus de lignes/colonnes  2) plus de mots cochés  3) dernière action la plus récente
+function resolveTimedWinner(sessionData) {
+  const players = Object.keys((sessionData&&sessionData.players) || {});
+  if (!players.length) return null;
+  const stats = (sessionData&&sessionData.stats) || {};
+  const marked = (sessionData&&sessionData.marked) || {};
+  const scored = players.map(name => {
+    const st = stats[name] || {};
+    const markedObj = marked[name] || {};
+    const markedCount = Object.keys(markedObj).length;
+    return {
+      name,
+      lineCount:   st.lineCount    || 0,
+      markedCount: markedCount,
+      lastMarkedAt: st.lastMarkedAt || 0
+    };
+  });
+  scored.sort((a, b) => {
+    if (b.lineCount   !== a.lineCount)   return b.lineCount   - a.lineCount;
+    if (b.markedCount !== a.markedCount) return b.markedCount - a.markedCount;
+    return b.lastMarkedAt - a.lastMarkedAt; // le plus récent gagne
+  });
+  return scored[0].name;
+}
+
+async function compressImage(file) {
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas");
+        c.width = c.height = 130;
+        const ctx = c.getContext("2d");
+        const m = Math.min(img.width, img.height);
+        ctx.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,130,130);
+        res(c.toDataURL("image/jpeg",0.78));
+      };
+      img.src = e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+function getFlame(s) {
+  if (s < 2) return null;
+  if (s >= 5) return {color:"#00aaff",anim:"pulse-blue",icon:"💙",label:"Série Légendaire !"};
+  if (s === 4) return {color:"#ffcc00",anim:"pulse-yellow",icon:"💛",label:"Série Dorée !"};
+  if (s === 3) return {color:"#ff7700",anim:"pulse-orange",icon:"🧡",label:"Série de Feu !"};
+  return {color:"#ff2200",anim:"pulse-red",icon:"❤️‍🔥",label:"Série lancée !"};
+}
+
+// ================================================================
+//  COMPOSANTS
+// ================================================================
+
+function FlameAvatar({photo, name, streak, size, bestStreak}) {
+  const sz = size || 60;
+  const fl = getFlame(streak || 0);
+  return (
+    <div style={{position:"relative",display:"inline-block",flexShrink:0}}>
+      <div style={{
+        width:sz, height:sz, borderRadius:"50%", overflow:"hidden",
+        border: fl ? ("3px solid "+fl.color) : "2.5px solid rgba(240,232,200,0.18)",
+        background:"#243624", display:"flex", alignItems:"center", justifyContent:"center",
+        animation: fl ? (fl.anim+" 1.6s ease-in-out infinite") : "none"
+      }}>
+        {photo
+          ? <img src={photo} alt={name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+          : <span style={{fontSize:sz*0.42,userSelect:"none",color:"#f0e8c8",fontWeight:700}}>{(name||"?")[0].toUpperCase()}</span>
+        }
+      </div>
+      {fl && (
+        <div style={{
+          position:"absolute", top:-9, left:"50%", fontSize:sz*0.33, lineHeight:1,
+          pointerEvents:"none", animation:"flameBounce 0.75s ease-in-out infinite alternate",
+          filter:"drop-shadow(0 0 5px "+fl.color+")"
+        }}>{fl.icon}</div>
+      )}
+    </div>
+  );
+}
+
+function PlayerCard({name, isHost}) {
+  const [ud, setUd] = useState(null);
+  useEffect(() => {
+    if (!db) return;
+    const ref = db.ref("users/"+name);
+    ref.on("value", s => setUd(s.val()));
+    return () => ref.off();
+  }, [name]);
+  return (
+    <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:"0.45rem"}}>
+      <FlameAvatar photo={ud&&ud.photo} name={name} streak={(ud&&ud.streak)||0} bestStreak={(ud&&ud.bestStreak)||0} size={58}/>
+      <div style={{fontSize:"0.78rem",color:isHost?"#f7c948":"rgba(240,232,200,0.75)",fontWeight:isHost?700:400,maxWidth:80,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+        {name}{isHost?" 👑":""}
+      </div>
+    </div>
+  );
+}
+
+function MiniPlayerBadge({name, isHost}) {
+  const [ud, setUd] = useState(null);
+  useEffect(() => {
+    if (!db) return;
+    const ref = db.ref("users/"+name);
+    ref.on("value", s => setUd(s.val()));
+    return () => ref.off();
+  }, [name]);
+  const wins = (ud&&ud.wins)||0;
+  return (
+    <div title={name+(isHost?" (hote)":"")} style={{position:"relative"}}>
+      <FlameAvatar photo={ud&&ud.photo} name={name} streak={(ud&&ud.streak)||0} bestStreak={(ud&&ud.bestStreak)||0} size={28}/>
+      {wins > 0 && (
+        <div style={{
+          position:"absolute",right:-3,bottom:-3,minWidth:13,height:13,borderRadius:7,
+          background: isHost ? "#f7c948" : "rgba(92,200,224,0.9)",
+          color:"#1a2e1a",fontSize:"0.5rem",fontWeight:900,
+          display:"flex",alignItems:"center",justifyContent:"center",
+          border:"1px solid #1a2e1a",padding:"0 2px"
+        }}>{"🏆"+wins}</div>
+      )}
+      {wins === 0 && isHost && (
+        <div style={{
+          position:"absolute",right:-2,bottom:-2,width:13,height:13,borderRadius:"50%",
+          background:"#f7c948",color:"#1a2e1a",fontSize:"0.5rem",fontWeight:900,
+          display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid #1a2e1a"
+        }}>👑</div>
+      )}
+    </div>
+  );
+}
+
+function NotifToast({notif, onDone}) {
+  useEffect(() => { const t = setTimeout(onDone,4500); return () => clearTimeout(t); },[]);
+  return (
+    <div style={{position:"fixed",top:14,left:"50%",zIndex:1000,animation:"slideDown 0.38s cubic-bezier(0.34,1.56,0.64,1)",background:"rgba(10,25,10,0.97)",border:"2px solid rgba(247,201,72,0.55)",borderRadius:18,padding:"0.9rem 1.4rem",display:"flex",alignItems:"center",gap:"1rem",boxShadow:"0 10px 40px rgba(0,0,0,0.6)",backdropFilter:"blur(14px)",maxWidth:360,width:"93vw",transform:"translateX(-50%)"}}>
+      <FlameAvatar photo={notif.photo} name={notif.player} streak={notif.streak||0} size={50}/>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontWeight:800,color:"#f7c948",fontSize:"0.98rem",marginBottom:2}}>{notif.player}</div>
+        <div style={{color:"rgba(240,232,200,0.88)",fontSize:"0.85rem",lineHeight:1.3}}>{notif.message}</div>
+        {notif.phrase && <div style={{color:"rgba(247,201,72,0.6)",fontSize:"0.78rem",marginTop:3,fontStyle:"italic"}}>{notif.phrase}</div>}
+      </div>
+    </div>
+  );
+}
+
+function Confetti() {
+  const ps = Array.from({length:65},(_,i)=>({
+    id:i, x:Math.random()*100, delay:Math.random()*2.2,
+    color:["#f7c948","#e05c5c","#5cc8e0","#7de08a","#e07de0","#e09a5c"][i%6],
+    size:7+Math.random()*11, rot:Math.random()*360, dur:1.8+Math.random()*1.4
+  }));
+  return (
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:998,overflow:"hidden"}}>
+      {ps.map(p=>(
+        <div key={p.id} style={{
+          position:"absolute",left:p.x+"%",top:"-20px",
+          width:p.size,height:p.size,background:p.color,
+          borderRadius:p.id%2===0?"50%":"2px",
+          transform:"rotate("+p.rot+"deg)",
+          animation:"confettiFall "+p.dur+"s "+p.delay+"s linear forwards"
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ================================================================
+//  ANIMATIONS POUVOIRS
+// ================================================================
+function PowerAnimation({type, onDone}) {
+  const dur = type==="freeze" ? 2400 : type==="shuffle" ? 2000 : type==="shield" ? 2000 : type==="sabotage" ? 2200 : type==="bomb" ? 1600 : type==="ghost" ? 3200 : type==="trap" ? 2000 : 2000;
+  useEffect(()=>{ const t = setTimeout(onDone, dur); return ()=>clearTimeout(t); },[]);
+
+  // --- FREEZE : vague de neige bleue/blanche ---
+  if (type==="freeze") {
+    const flakes = Array.from({length:38},(_,i)=>({
+      id:i, x:Math.random()*100, size:10+Math.random()*18,
+      delay:Math.random()*1.2, dur:1.4+Math.random()*1.0,
+      rot:Math.random()*360, opacity:0.55+Math.random()*0.45,
+      shape:i%3===0?"❄️":i%3===1?"*":"·"
+    }));
+    return (
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:1200,overflow:"hidden"}}>
+        <div style={{position:"absolute",top:0,left:0,width:"60vw",height:"100%",background:"linear-gradient(90deg,rgba(92,200,224,0) 0%,rgba(92,200,224,0.18) 40%,rgba(180,235,255,0.32) 70%,rgba(92,200,224,0.08) 100%)",animation:"freezeWave 1.8s cubic-bezier(0.4,0,0.2,1) forwards",filter:"blur(2px)"}}/>
+        <div style={{position:"absolute",top:0,left:0,width:"40vw",height:"100%",background:"linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0.12) 50%,rgba(200,240,255,0.22) 80%,rgba(255,255,255,0) 100%)",animation:"freezeWave 2.0s 0.2s cubic-bezier(0.4,0,0.2,1) forwards",filter:"blur(4px)"}}/>
+        {flakes.map(f=>(
+          <div key={f.id} style={{position:"absolute",left:f.x+"%",top:"-30px",fontSize:f.size,color:f.id%2===0?"rgba(92,200,224,"+f.opacity+")":"rgba(200,240,255,"+f.opacity+")",transform:"rotate("+f.rot+"deg)",animation:"freezeFlake "+f.dur+"s "+f.delay+"s linear forwards",filter:"drop-shadow(0 0 4px rgba(92,200,224,0.7))"}}>{f.shape}</div>
+        ))}
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 50%, rgba(92,200,224,0.07) 0%, transparent 70%)",animation:"powerFlash 2.4s ease forwards"}}/>
+      </div>
+    );
+  }
+
+  // --- SHUFFLE : vortex / trou noir qui aspire ---
+  if (type==="shuffle") {
+    const particles = Array.from({length:16},(_,i)=>({
+      id:i,
+      angle: (i/16)*360,
+      dist: 80+Math.random()*120,
+      size: 6+Math.random()*10,
+      delay: Math.random()*0.4,
+      color: ["#f7c948","#5cc8e0","#7de08a","#e05c5c","#e07de0"][i%5]
+    }));
+    return (
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:1200,overflow:"hidden",animation:"powerFlash 2.0s ease forwards"}}>
+        {/* Fond violet sombre */}
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 50%, rgba(60,0,80,0.55) 0%, transparent 70%)"}}/>
+        {/* Anneaux du vortex */}
+        {[0,1,2].map(r=>(
+          <div key={r} style={{
+            position:"absolute",top:"50%",left:"50%",
+            width:(120+r*80)+"px",height:(120+r*80)+"px",
+            borderRadius:"50%",
+            border:"2px solid rgba(180,80,255,"+(0.5-r*0.1)+")",
+            animation:"vortexRing "+(0.8+r*0.2)+"s "+(r*0.15)+"s ease-out forwards"
+          }}/>
+        ))}
+        {/* Particules aspirées */}
+        {particles.map(p=>{
+          const rad = p.angle*(Math.PI/180);
+          const x = Math.cos(rad)*p.dist;
+          const y = Math.sin(rad)*p.dist;
+          return (
+            <div key={p.id} style={{
+              position:"absolute",
+              top:"calc(50% + "+y+"px)",left:"calc(50% + "+x+"px)",
+              width:p.size,height:p.size,
+              borderRadius:"50%",background:p.color,
+              animation:"vortexPull 1.0s "+p.delay+"s cubic-bezier(0.4,0,1,1) forwards",
+              filter:"blur(1px)"
+            }}/>
+          );
+        })}
+        {/* Trou noir central */}
+        <div style={{
+          position:"absolute",top:"50%",left:"50%",
+          width:"90px",height:"90px",borderRadius:"50%",
+          background:"radial-gradient(ellipse at 40% 35%, rgba(160,60,255,0.9) 0%, rgba(30,0,60,1) 50%, #000 100%)",
+          border:"3px solid rgba(180,80,255,0.8)",
+          animation:"vortexSuck 2.0s cubic-bezier(0.4,0,0.2,1) forwards",
+          boxShadow:"0 0 40px 10px rgba(140,40,255,0.5), inset 0 0 30px rgba(0,0,0,0.9)"
+        }}/>
+        {/* Emoji */}
+        <div style={{position:"absolute",top:"50%",left:"50%",fontSize:"2.2rem",animation:"vortexPull 1.8s 0.1s ease-in forwards",filter:"drop-shadow(0 0 8px rgba(180,80,255,1))"}}>🔀</div>
+      </div>
+    );
+  }
+
+  // --- SHIELD : bouclier avec reflet diagonal ---
+  if (type==="shield") {
+    return (
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:1200,overflow:"hidden",animation:"powerFlash 2.0s ease forwards"}}>
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 50%, rgba(247,201,72,0.12) 0%, transparent 65%)",animation:"shieldPulse 1.0s ease-in-out 2"}}/>
+        {/* Bouclier principal */}
+        <div style={{
+          position:"absolute",top:"50%",left:"50%",
+          fontSize:"7rem",lineHeight:1,
+          animation:"shieldAppear 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards",
+          filter:"drop-shadow(0 0 25px rgba(247,201,72,0.9)) drop-shadow(0 0 8px #fff)"
+        }}>🛡️</div>
+        {/* Reflet diagonal qui traverse */}
+        <div style={{
+          position:"absolute",top:"50%",left:"50%",
+          width:"30px",height:"300px",
+          background:"linear-gradient(180deg,transparent 0%,rgba(255,255,255,0.9) 50%,transparent 100%)",
+          transform:"translate(-50%,-50%) rotate(45deg)",
+          animation:"shieldShine 0.9s 0.4s cubic-bezier(0.4,0,0.2,1) forwards",
+          filter:"blur(3px)",opacity:0.8
+        }}/>
+        {/* Second reflet plus fin */}
+        <div style={{
+          position:"absolute",top:"50%",left:"50%",
+          width:"12px",height:"200px",
+          background:"linear-gradient(180deg,transparent 0%,rgba(255,255,255,0.6) 50%,transparent 100%)",
+          transform:"translate(-50%,-50%) rotate(45deg)",
+          animation:"shieldShine 0.9s 0.55s cubic-bezier(0.4,0,0.2,1) forwards",
+          filter:"blur(1px)"
+        }}/>
+      </div>
+    );
+  }
+
+  // --- SABOTAGE : troll face + pétard ---
+  if (type==="sabotage") {
+    return (
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:1200,overflow:"hidden",animation:"powerFlash 2.2s ease forwards"}}>
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 50%, rgba(180,40,40,0.22) 0%, transparent 65%)"}}/>
+        {/* Troll face SVG */}
+        <div style={{
+          position:"absolute",top:"40%",left:"50%",
+          fontSize:"6.5rem",lineHeight:1,userSelect:"none",
+          animation:"trollEntry 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards, trollBounce 0.4s 0.45s ease-in-out infinite",
+          filter:"drop-shadow(0 0 18px rgba(255,80,80,0.9))"
+        }}>😈</div>
+        {/* Texte troll */}
+        <div style={{
+          position:"absolute",top:"calc(40% + 90px)",left:"50%",transform:"translateX(-50%)",
+          color:"#ff4444",fontWeight:900,fontSize:"1.3rem",letterSpacing:"0.1em",
+          textShadow:"0 0 12px rgba(255,80,80,0.9)",
+          animation:"trollEntry 0.5s 0.1s ease forwards"
+        }}>U MAD BRO ?</div>
+        {/* Pétard qui explose */}
+        <div style={{
+          position:"absolute",top:"30%",left:"65%",
+          fontSize:"3rem",
+          animation:"petardSpin 0.8s 0.3s ease-in forwards"
+        }}>🧨</div>
+        <div style={{
+          position:"absolute",top:"28%",left:"63%",
+          fontSize:"3rem",
+          animation:"petardBoom 0.6s 1.0s ease-out forwards",
+          opacity:0
+        }}>💥</div>
+        {/* Confettis moqueurs */}
+        {Array.from({length:12},(_,i)=>(
+          <div key={i} style={{
+            position:"absolute",
+            left:(20+Math.random()*60)+"%",
+            top:"-20px",
+            fontSize:(1.2+Math.random()*1.2)+"rem",
+            animation:"freezeFlake "+(0.8+Math.random()*0.8)+"s "+(Math.random()*0.6)+"s ease-in forwards"
+          }}>{["😂","💀","🤣","👀","💥","🎉"][i%6]}</div>
+        ))}
+      </div>
+    );
+  }
+
+  // --- BOMB : explosion rouge ---
+  if (type==="bomb") {
+    return (
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:1200,overflow:"hidden",animation:"bombShake 0.7s ease"}}>
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 50%, rgba(255,60,0,0.35) 0%, transparent 60%)",animation:"bombFlash 1.6s ease forwards"}}/>
+        <div style={{position:"absolute",top:"50%",left:"50%",fontSize:"6rem",animation:"vortexSuck 0.6s ease-out forwards, popIn 0.25s ease",filter:"drop-shadow(0 0 30px rgba(255,100,0,1))"}}>💥</div>
+        <div style={{position:"absolute",top:"50%",left:"50%",fontSize:"4rem",animation:"petardBoom 1.0s 0.3s ease-out forwards",opacity:0,filter:"drop-shadow(0 0 20px rgba(255,60,0,0.9))"}}>💣</div>
+        {/* Éclats */}
+        {Array.from({length:8},(_,i)=>{
+          const a=(i/8)*360; const r=100+Math.random()*80;
+          return <div key={i} style={{
+            position:"absolute",top:"50%",left:"50%",
+            fontSize:"1.5rem",
+            transform:"translate(-50%,-50%)",
+            animation:"vortexPull "+(0.5+Math.random()*0.4)+"s "+(i*0.05)+"s ease-in forwards",
+            filter:"drop-shadow(0 0 6px rgba(255,100,0,0.9))"
+          }}>✦</div>;
+        })}
+      </div>
+    );
+  }
+
+  // --- TARGET / CIBLAGE : laser radar + curseur ---
+  if (type==="target") {
+    return (
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:1200,overflow:"hidden",animation:"powerFlash 2.0s ease forwards"}}>
+        {/* Fond sombre rouge */}
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 50%, rgba(180,0,0,0.25) 0%, transparent 65%)"}}/>
+        {/* Cercles de radar */}
+        {[0,1,2].map(r=>(
+          <div key={r} style={{
+            position:"absolute",top:"50%",left:"50%",
+            width:(100+r*100)+"px",height:(100+r*100)+"px",
+            borderRadius:"50%",
+            border:"1.5px solid rgba(255,60,60,"+(0.7-r*0.15)+")",
+            animation:"targetPing 1.2s "+(r*0.25)+"s ease-out infinite"
+          }}/>
+        ))}
+        {/* Ligne de scan horizontale */}
+        <div style={{
+          position:"absolute",left:0,right:0,height:"2px",
+          background:"linear-gradient(90deg,transparent,rgba(255,60,60,0.8),transparent)",
+          animation:"targetScan 1.0s linear infinite",
+          boxShadow:"0 0 8px rgba(255,60,60,0.6)"
+        }}/>
+        {/* Croix centrale */}
+        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"50px",height:"2px",background:"rgba(255,60,60,0.9)",boxShadow:"0 0 6px rgba(255,60,60,0.8)"}}/>
+        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"2px",height:"50px",background:"rgba(255,60,60,0.9)",boxShadow:"0 0 6px rgba(255,60,60,0.8)"}}/>
+        {/* Emoji cible */}
+        <div style={{
+          position:"absolute",top:"50%",left:"50%",
+          fontSize:"5rem",
+          animation:"targetSpin 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards",
+          filter:"drop-shadow(0 0 20px rgba(255,60,60,1))"
+        }}>🎯</div>
+      </div>
+    );
+  }
+
+  // --- GHOST : screamer fantôme qui couvre l'écran ---
+  if (type==="ghost") {
+    const dur = 3200;
+    return (
+      <div style={{
+        position:"fixed",inset:0,zIndex:1300,overflow:"hidden",
+        // Couvre TOUT l'écran opaque pour masquer la grille
+        background:"#000",
+        animation:"ghostScreenCover "+dur+"ms ease forwards",
+        pointerEvents:"none"
+      }}>
+        {/* Fond bruité vert-noir style horreur */}
+        <div style={{
+          position:"absolute",inset:0,
+          background:"radial-gradient(ellipse at 50% 40%, rgba(0,40,0,0.95) 0%, #000 70%)",
+          animation:"ghostFlicker "+dur+"ms ease forwards"
+        }}/>
+        {/* Lignes de scan style vieux écran */}
+        <div style={{
+          position:"absolute",inset:0,
+          backgroundImage:"repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px)",
+          pointerEvents:"none"
+        }}/>
+        {/* Fantôme SVG custom - surgit du centre */}
+        <div style={{
+          position:"absolute",top:"45%",left:"50%",
+          animation:"ghostScream "+dur+"ms cubic-bezier(0.16,1,0.3,1) forwards, ghostWobble 0.4s 0.25s ease-in-out infinite",
+          fontSize:"0",lineHeight:0
+        }}>
+          <svg width="280" height="320" viewBox="0 0 280 320" style={{filter:"drop-shadow(0 0 30px rgba(180,255,180,0.8)) drop-shadow(0 0 60px rgba(0,255,0,0.4))"}}>
+            {/* Corps du fantôme */}
+            <path d="M140 20 C60 20 30 80 30 160 L30 290 L55 265 L80 290 L105 265 L130 290 L155 265 L180 290 L205 265 L230 290 L250 160 C250 80 220 20 140 20Z"
+              fill="rgba(200,255,200,0.92)" stroke="rgba(100,255,100,0.6)" strokeWidth="2"/>
+            {/* Yeux - clignotants */}
+            <ellipse cx="105" cy="130" rx="22" ry="26" fill="#000"/>
+            <ellipse cx="175" cy="130" rx="22" ry="26" fill="#000"/>
+            {/* Pupilles vertes */}
+            <ellipse cx="108" cy="133" rx="10" ry="12" fill="rgba(0,255,80,0.9)" style={{animation:"ghostEye 3s ease-in-out infinite"}}/>
+            <ellipse cx="178" cy="133" rx="10" ry="12" fill="rgba(0,255,80,0.9)" style={{animation:"ghostEye 3s 0.2s ease-in-out infinite"}}/>
+            {/* Reflets yeux */}
+            <ellipse cx="113" cy="126" rx="4" ry="4" fill="rgba(255,255,255,0.7)"/>
+            <ellipse cx="183" cy="126" rx="4" ry="4" fill="rgba(255,255,255,0.7)"/>
+            {/* Bouche ouverte style screamer */}
+            <ellipse cx="140" cy="195" rx="32" ry="28" fill="#000"/>
+            <ellipse cx="140" cy="195" rx="22" ry="18" fill="rgba(40,0,0,0.95)"/>
+            {/* Dents */}
+            <rect x="118" y="182" width="12" height="14" rx="2" fill="rgba(220,220,220,0.9)"/>
+            <rect x="134" y="180" width="12" height="16" rx="2" fill="rgba(220,220,220,0.9)"/>
+            <rect x="150" y="182" width="12" height="14" rx="2" fill="rgba(220,220,220,0.9)"/>
+          </svg>
+        </div>
+        {/* Texte "BOO!" qui clignote */}
+        <div style={{
+          position:"absolute",top:"18%",left:"50%",transform:"translateX(-50%)",
+          fontSize:"clamp(3.5rem,15vw,7rem)",fontWeight:900,
+          color:"rgba(180,255,180,0.95)",
+          fontFamily:"Georgia,serif",letterSpacing:"0.15em",
+          textShadow:"0 0 20px rgba(0,255,0,0.8), 0 0 50px rgba(0,255,0,0.4)",
+          animation:"ghostTextFlash "+dur+"ms ease forwards",
+          whiteSpace:"nowrap"
+        }}>BOO!</div>
+        {/* Sous-texte */}
+        <div style={{
+          position:"absolute",bottom:"20%",left:"50%",transform:"translateX(-50%)",
+          fontSize:"clamp(0.85rem,3vw,1.1rem)",fontWeight:700,
+          color:"rgba(150,255,150,0.75)",
+          textAlign:"center",letterSpacing:"0.08em",
+          animation:"ghostTextFlash "+dur+"ms 0.1s ease forwards",
+          whiteSpace:"nowrap"
+        }}>Une case a été piégée...</div>
+        {/* Particules fantômes aux coins */}
+        {[
+          {top:"8%",left:"5%",size:"2.8rem"},
+          {top:"8%",right:"5%",size:"2.2rem"},
+          {bottom:"8%",left:"8%",size:"2rem"},
+          {bottom:"12%",right:"6%",size:"2.5rem"},
+          {top:"45%",left:"3%",size:"1.8rem"},
+          {top:"40%",right:"3%",size:"2rem"},
+        ].map((g,idx)=>(
+          <div key={idx} style={{
+            position:"absolute",...g,fontSize:g.size,
+            animation:"ghostTextFlash "+dur+"ms "+(idx*0.08)+"s ease forwards",
+            filter:"drop-shadow(0 0 6px rgba(0,255,0,0.7))"
+          }}>👻</div>
+        ))}
+      </div>
+    );
+  }
+
+  // --- TRAP : piège à ours qui claque ---
+  if (type==="trap") {
+    return (
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:1200,overflow:"hidden",animation:"powerFlash 2.0s ease forwards"}}>
+        <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 50%, rgba(139,60,20,0.3) 0%, transparent 65%)"}}/>
+        {/* Cercles d'impact */}
+        {[0,1,2].map(r=>(
+          <div key={r} style={{
+            position:"absolute",top:"50%",left:"50%",
+            width:(80+r*60)+"px",height:(80+r*60)+"px",
+            borderRadius:"50%",
+            border:"2px solid rgba(200,120,50,"+(0.8-r*0.2)+")",
+            animation:"trapSpark 0.8s "+(r*0.15)+"s ease-out forwards",opacity:0
+          }}/>
+        ))}
+        {/* Piège à ours SVG */}
+        <div style={{
+          position:"absolute",top:"50%",left:"50%",
+          fontSize:"7rem",lineHeight:1,
+          animation:"trapSnap 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards, trapShake 0.4s 0.5s ease-in-out",
+          filter:"drop-shadow(0 0 25px rgba(200,80,20,1)) drop-shadow(0 0 10px rgba(255,150,50,0.8))"
+        }}>🪤</div>
+        {/* Texte */}
+        <div style={{
+          position:"absolute",top:"calc(50% + 80px)",left:"50%",transform:"translateX(-50%)",
+          fontSize:"1.4rem",fontWeight:900,color:"rgba(220,120,50,0.95)",
+          textShadow:"0 0 15px rgba(200,80,20,0.8)",
+          animation:"popIn 0.3s 0.4s ease both",
+          whiteSpace:"nowrap"
+        }}>SNAP ! 🪤</div>
+      </div>
+    );
+  }
+
+  // end PowerAnimation
+  return null;
+}
+
+// ================================================================
+//  ECRAN SETUP (Firebase non configure)
+// ================================================================
+function SetupScreen() {
+  const rules = '{\n  "rules": {\n    ".read": true,\n    ".write": true\n  }\n}';
+  return (
+    <div style={{maxWidth:600,margin:"0 auto",padding:"2rem 1rem"}}>
+      <div style={{textAlign:"center",marginBottom:"2rem"}}>
+        <div style={{fontSize:"3rem",fontFamily:"Georgia,serif",fontWeight:900,color:"#f7c948",letterSpacing:"0.25em"}}>{GAME_NAME}</div>
+        <div style={{color:"rgba(240,232,200,0.5)",fontStyle:"italic",marginTop:"0.3rem"}}>Configuration Firebase requise</div>
+      </div>
+      <div style={{background:"rgba(255,255,255,0.04)",border:"2px solid rgba(247,201,72,0.3)",borderRadius:14,padding:"1.8rem"}}>
+        <h3 style={{color:"#f7c948",marginBottom:"1.2rem"}}>5 étapes pour activer le multijoueur</h3>
+        <ol style={{lineHeight:2.3,paddingLeft:"1.5rem",color:"rgba(240,232,200,0.85)",fontSize:"0.9rem"}}>
+          <li>Va sur <a href="https://console.firebase.google.com" target="_blank" style={{color:"#f7c948"}}>console.firebase.google.com</a></li>
+          <li>Crée un projet sans Google Analytics</li>
+          <li>Realtime Database → Créer → Mode test</li>
+          <li>Onglet Règles → Colle ce texte → Publier</li>
+        </ol>
+        <pre style={{background:"rgba(0,0,0,0.4)",borderRadius:8,padding:"0.85rem",fontSize:"0.82rem",color:"#7de08a",margin:"0.6rem 0 1.1rem",overflow:"auto"}}>{rules}</pre>
+        <ol start={5} style={{lineHeight:2.3,paddingLeft:"1.5rem",color:"rgba(240,232,200,0.85)",fontSize:"0.9rem"}}>
+          <li>Paramètres → App Web → Copie firebaseConfig → Remplace dans ce fichier</li>
+        </ol>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+//  LOGIN
+// ================================================================
+function LoginScreen({onLogin}) {
+  const [name, setName] = useState("");
+  const [shake, setShake] = useState(false);
+  const go = () => {
+    if (!name.trim()) { setShake(true); setTimeout(()=>setShake(false),500); return; }
+    onLogin(name.trim());
+  };
+  return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"1rem"}}>
+      <div style={{textAlign:"center",background:"rgba(255,255,255,0.04)",border:"2px solid rgba(255,255,255,0.13)",borderRadius:18,padding:"3rem 2.5rem",maxWidth:400,width:"100%"}}>
+        <div style={{fontSize:"clamp(2rem,8vw,3.8rem)",fontFamily:"Georgia,serif",fontWeight:900,letterSpacing:"0.2em",color:"#f7c948",textShadow:"0 0 30px rgba(247,201,72,0.4)",lineHeight:1.1,marginBottom:"1rem"}}>{GAME_NAME}</div>
+        <div style={{display:"flex",flexDirection:"column",gap:"0.85rem"}}>
+          <input placeholder="Ton prenom..." value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} autoFocus style={shake?{animation:"shake 0.4s"}:{}}/>
+          <button className="btn" onClick={go} style={{width:"100%",fontSize:"1.05rem",padding:"0.85rem"}}>Connexion 🎲</button>
+        </div>
+        <p style={{marginTop:"1rem",fontSize:"0.78rem",color:"rgba(240,232,200,0.3)"}}>Profil créé automatiquement</p>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+//  PROFIL
+// ================================================================
+function ProfileScreen({player, savePlayer, onContinue, onLab}) {
+  const fileRef = useRef();
+  const [uploading, setUploading] = useState(false);
+  const fl = getFlame(player.streak||0);
+  const handlePhoto = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    setUploading(true);
+    try { const c = await compressImage(f); savePlayer({...player,photo:c}); }
+    finally { setUploading(false); }
+  };
+  const winRate = getWinRate(player);
+  const isLabUser = LAB_USERS.includes((player.name||"").trim().toLowerCase());
+  return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"1rem"}}>
+      <div style={{background:"rgba(255,255,255,0.04)",border:"2px solid rgba(255,255,255,0.13)",borderRadius:18,padding:"2.5rem 2rem",maxWidth:380,width:"100%",textAlign:"center"}}>
+        <h2 style={{color:"#f7c948",marginBottom:"1.8rem",fontSize:"1.1rem",fontWeight:800,letterSpacing:"0.12em"}}>MON PROFIL</h2>
+        <div style={{position:"relative",display:"inline-block",marginBottom:"1.3rem"}}>
+          <FlameAvatar photo={player.photo} name={player.name} streak={player.streak||0} bestStreak={player.bestStreak||0} size={104}/>
+          <button onClick={()=>fileRef.current.click()} disabled={uploading} title="Changer la photo"
+            style={{position:"absolute",bottom:3,right:3,background:"#f7c948",border:"none",borderRadius:"50%",width:32,height:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.95rem",boxShadow:"0 2px 8px rgba(0,0,0,0.4)"}}>
+            {uploading?"...":"✏️"}
+          </button>
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
+        <div style={{fontSize:"1.65rem",fontWeight:800,marginBottom:"0.25rem"}}>{player.name}</div>
+        {fl && <div style={{color:fl.color,fontSize:"0.9rem",marginBottom:"0.8rem",fontWeight:700}}>{fl.icon} {fl.label}</div>}
+        <div style={{display:"flex",justifyContent:"center",margin:"1.5rem 0",background:"rgba(0,0,0,0.22)",borderRadius:12,overflow:"hidden"}}>
+          {[
+            {label:"Victoires",value:player.wins||0,color:"#f7c948"},
+            {label:"Parties",  value:player.gamesPlayed||0,color:"#5cc8e0"},
+            {label:"Serie",    value:player.streak||0,color:(fl&&fl.color)||"rgba(240,232,200,0.3)"},
+            {label:"Taux",     value:winRate+"%",color:"#7de08a"},
+          ].map((s,i)=>(
+            <div key={i} style={{flex:1,padding:"1rem 0.5rem",borderRight:i<3?"1px solid rgba(255,255,255,0.07)":"none"}}>
+              <div style={{fontSize:"1.65rem",fontWeight:900,color:s.color,lineHeight:1}}>{s.value}</div>
+              <div style={{fontSize:"0.68rem",color:"rgba(240,232,200,0.4)",marginTop:4,textTransform:"uppercase"}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:"0.7rem",marginBottom:"1.1rem"}}>
+          {[
+            {label:"Victoires Facile", value:player.winsEasy||0, color:"#8bd96b"},
+            {label:"Victoires Moyen", value:player.winsMedium||0, color:"#5cc8e0"},
+            {label:"Victoires Normal", value:player.winsNormal||0, color:"#f7c948"}
+          ].map(stat=>(
+            <div key={stat.label} style={{background:"rgba(0,0,0,0.18)",borderRadius:12,padding:"0.8rem 0.55rem"}}>
+              <div style={{fontSize:"1.35rem",fontWeight:900,color:stat.color,lineHeight:1}}>{stat.value}</div>
+              <div style={{fontSize:"0.66rem",color:"rgba(240,232,200,0.44)",marginTop:6,textTransform:"uppercase",lineHeight:1.35}}>{stat.label}</div>
+            </div>
+          ))}
+        </div>
+        {isLabUser && (
+          <button className="btn-ghost" onClick={onLab} style={{width:"100%",fontSize:"0.95rem",padding:"0.85rem",marginBottom:"0.8rem"}}>
+            🔬 Laboratoire
+          </button>
+        )}
+        <button className="btn" onClick={onContinue} style={{width:"100%",fontSize:"1.05rem",padding:"0.9rem"}}>Jouer 🎲</button>
+      </div>
+    </div>
+  );
+}
+
+function LabScreen({player, onBack, onStartLab, onPlayers}) {
+  const [difficulty, setDifficulty] = useState("normal");
+  const [powerMode, setPowerMode] = useState(false);
+  const [activeTab, setActiveTab] = useState("lancer");
+  const cfg = getDifficultyConfig(difficulty);
+
+  // Etat des niveaux de mots (chargé depuis Firebase)
+  const [wordLevels, setWordLevels] = useState({});
+  const [wordList, setWordList] = useState([]);
+  const [levelFilter, setLevelFilter] = useState(null); // null = tous
+  useEffect(()=>{
+    if (!db) return;
+    const levRef = db.ref("wordLevels");
+    const levHandler = snap=>setWordLevels(snap.val()||{});
+    levRef.on("value", levHandler);
+    const listRef = db.ref("wordLists/bts");
+    const listHandler = snap=>{
+      const raw = snap.val();
+      setWordList(raw&&raw.length ? raw : INITIAL_BTS_REFS);
+    };
+    listRef.on("value", listHandler);
+    return ()=>{ levRef.off("value",levHandler); listRef.off("value",listHandler); };
+  },[]);
+
+  const setWordLevel = (word, level) => {
+    if (!db) return;
+    if (level===null) db.ref("wordLevels/"+encodeURIComponent(word).replace(/\./g,'%2E')).remove();
+    else db.ref("wordLevels/"+encodeURIComponent(word).replace(/\./g,'%2E')).set(level);
+  };
+
+  const sortedWords = [...wordList].sort((a,b)=>a.localeCompare(b,"fr"));
+  const filteredWords = levelFilter
+    ? sortedWords.filter(w=>wordLevels[encodeURIComponent(w).replace(/\./g,'%2E')]===levelFilter)
+    : sortedWords;
+
+  const TAB_STYLE = (active) => ({
+    flex:1, padding:"0.6rem 0.3rem", border:"none", borderRadius:8, cursor:"pointer",
+    fontWeight:700, fontSize:"0.82rem",
+    background: active ? "#f7c948" : "rgba(255,255,255,0.06)",
+    color: active ? "#1a2e1a" : "rgba(240,232,200,0.6)"
+  });
+
+  return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"1rem"}}>
+      <div style={{maxWidth:600,width:"100%"}}>
+        <button className="back-btn" style={{marginBottom:"1.2rem",display:"block"}} onClick={onBack}>← Retour</button>
+
+        {/* Onglets */}
+        <div style={{display:"flex",gap:"0.4rem",marginBottom:"1rem",background:"rgba(0,0,0,0.25)",borderRadius:10,padding:"0.3rem"}}>
+          <button style={TAB_STYLE(activeTab==="lancer")} onClick={()=>setActiveTab("lancer")}>🎯 Lancer</button>
+          <button style={TAB_STYLE(activeTab==="mots")} onClick={()=>setActiveTab("mots")}>📝 Niveaux de mots</button>
+        </div>
+
+        {/* ---- ONGLET LANCER ---- */}
+        {activeTab==="lancer" && (
+        <div style={{background:"rgba(255,255,255,0.04)",border:"2px solid rgba(247,201,72,0.3)",borderRadius:18,padding:"1.6rem"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"0.7rem",marginBottom:"1.4rem"}}>
+            <div style={{fontSize:"1.8rem"}}>🔬</div>
+            <div>
+              <div style={{fontSize:"1.4rem",fontWeight:900,color:"#f7c948",lineHeight:1}}>Laboratoire</div>
+              <div style={{fontSize:"0.78rem",color:"rgba(240,232,200,0.42)",marginTop:3}}>Parties de test — victoires non comptabilisées</div>
+            </div>
+          </div>
+          <div style={{marginBottom:"1.1rem"}}>
+            <div style={{fontSize:"0.75rem",color:"rgba(240,232,200,0.45)",textTransform:"uppercase",marginBottom:"0.55rem",letterSpacing:"0.1em"}}>Difficulte</div>
+            <div style={{display:"flex",gap:"0.5rem"}}>
+              {DIFFICULTY_ORDER.map(key=>{
+                const c = getDifficultyConfig(key);
+                return (
+                  <button key={key} onClick={()=>setDifficulty(key)} style={{
+                    flex:1,padding:"0.65rem 0.3rem",border:"none",borderRadius:9,cursor:"pointer",
+                    fontWeight:700,fontSize:"0.82rem",
+                    background: difficulty===key ? "#f7c948" : "rgba(255,255,255,0.06)",
+                    color: difficulty===key ? "#1a2e1a" : "rgba(240,232,200,0.65)"
+                  }}>{c.label}<br/><span style={{fontSize:"0.7rem",fontWeight:500,opacity:0.75}}>{c.size}x{c.size}</span></button>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{marginBottom:"1.4rem"}}>
+            <div style={{fontSize:"0.75rem",color:"rgba(240,232,200,0.45)",textTransform:"uppercase",marginBottom:"0.55rem",letterSpacing:"0.1em"}}>Mode pouvoir</div>
+            <div style={{display:"flex",gap:"0.5rem"}}>
+              {[{key:false,label:"Desactive"},{key:true,label:"⚡ Active"}].map(opt=>(
+                <button key={String(opt.key)} onClick={()=>setPowerMode(opt.key)} style={{
+                  flex:1,padding:"0.65rem",border:"none",borderRadius:9,cursor:"pointer",
+                  fontWeight:700,fontSize:"0.88rem",
+                  background: powerMode===opt.key ? "#f7c948" : "rgba(255,255,255,0.06)",
+                  color: powerMode===opt.key ? "#1a2e1a" : "rgba(240,232,200,0.65)"
+                }}>{opt.label}</button>
+              ))}
+            </div>
+          </div>
+          <button className="btn" onClick={()=>onStartLab({difficulty, powerMode})} style={{width:"100%",fontSize:"1.05rem",padding:"1rem",marginBottom:"0.75rem"}}>
+            🎯 Lancer la partie ({cfg.size}x{cfg.size})
+          </button>
+          <button className="btn-ghost" onClick={onPlayers} style={{width:"100%",fontSize:"0.9rem",padding:"0.75rem"}}>
+            👥 Voir les joueurs et stats
+          </button>
+          <div style={{fontSize:"0.72rem",color:"rgba(240,232,200,0.28)",marginTop:"1rem",textAlign:"center"}}>
+            Profil actif : {player.name}
+          </div>
+        </div>
+        )}
+
+        {/* ---- ONGLET MOTS ---- */}
+        {activeTab==="mots" && (
+        <div style={{background:"rgba(255,255,255,0.04)",border:"2px solid rgba(255,255,255,0.1)",borderRadius:18,padding:"1.4rem"}}>
+          <div style={{fontSize:"1.2rem",fontWeight:900,color:"#f7c948",marginBottom:"0.3rem"}}>📝 Niveaux de mots</div>
+          <div style={{fontSize:"0.78rem",color:"rgba(240,232,200,0.42)",marginBottom:"1rem"}}>
+            Attribue un niveau de difficulté à chaque mot. Les niveaux sont sauvegardés.
+          </div>
+          {/* Filtre par niveau */}
+          <div style={{display:"flex",gap:"0.4rem",marginBottom:"1rem",flexWrap:"wrap"}}>
+            <button onClick={()=>setLevelFilter(null)} style={{
+              padding:"0.4rem 0.75rem",border:"none",borderRadius:7,cursor:"pointer",fontSize:"0.78rem",fontWeight:700,
+              background:levelFilter===null?"rgba(240,232,200,0.2)":"rgba(255,255,255,0.05)",
+              color:"rgba(240,232,200,0.7)"
+            }}>Tous ({sortedWords.length})</button>
+            {WORD_LEVEL_OPTIONS.map(opt=>{
+              const count = sortedWords.filter(w=>wordLevels[encodeURIComponent(w).replace(/\./g,'%2E')]===opt.key).length;
+              return (
+                <button key={opt.key} onClick={()=>setLevelFilter(levelFilter===opt.key?null:opt.key)} style={{
+                  padding:"0.4rem 0.75rem",border:"none",borderRadius:7,cursor:"pointer",fontSize:"0.78rem",fontWeight:700,
+                  background:levelFilter===opt.key?opt.color:"rgba(255,255,255,0.05)",
+                  color:levelFilter===opt.key?"#1a2e1a":opt.color
+                }}>{opt.label} ({count})</button>
+              );
+            })}
+            <button onClick={()=>setLevelFilter("none")} style={{
+              padding:"0.4rem 0.75rem",border:"none",borderRadius:7,cursor:"pointer",fontSize:"0.78rem",fontWeight:700,
+              background:levelFilter==="none"?"rgba(240,232,200,0.15)":"rgba(255,255,255,0.05)",
+              color:"rgba(240,232,200,0.45)"
+            }}>Sans niveau ({sortedWords.filter(w=>!wordLevels[encodeURIComponent(w).replace(/\./g,'%2E')]).length})</button>
+          </div>
+          {/* Liste des mots */}
+          <div style={{display:"flex",flexDirection:"column",gap:"0.45rem",maxHeight:"55vh",overflowY:"auto",paddingRight:"0.2rem"}}>
+            {(levelFilter==="none"
+              ? sortedWords.filter(w=>!wordLevels[encodeURIComponent(w).replace(/\./g,'%2E')])
+              : filteredWords
+            ).map(word=>{
+              const key = encodeURIComponent(word).replace(/\./g,'%2E');
+              const currentLevel = wordLevels[key] || null;
+              const levelOpt = WORD_LEVEL_OPTIONS.find(o=>o.key===currentLevel);
+              return (
+                <div key={word} style={{display:"flex",alignItems:"center",gap:"0.5rem",background:"rgba(0,0,0,0.18)",borderRadius:10,padding:"0.55rem 0.75rem"}}>
+                  <div style={{flex:1,fontSize:"0.88rem",fontWeight:600}}>{word}</div>
+                  <div style={{display:"flex",gap:"0.3rem",flexShrink:0}}>
+                    {WORD_LEVEL_OPTIONS.map(opt=>(
+                      <button key={opt.key} onClick={()=>setWordLevel(word, currentLevel===opt.key?null:opt.key)} title={opt.label} style={{
+                        width:28,height:28,border:"none",borderRadius:6,cursor:"pointer",fontSize:"0.7rem",fontWeight:900,
+                        background:currentLevel===opt.key?opt.color:"rgba(255,255,255,0.06)",
+                        color:currentLevel===opt.key?"#1a2e1a":opt.color,
+                        transition:"background 0.15s"
+                      }}>{opt.label[0]}</button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{fontSize:"0.72rem",color:"rgba(240,232,200,0.28)",marginTop:"0.9rem",textAlign:"center"}}>
+            Clique sur F/M/D/H pour attribuer un niveau. Reclique pour le retirer.
+          </div>
+        </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LabPlayersScreen({onBack}) {
+  const [users, setUsers] = useState([]);
+  const [resetTarget, setResetTarget] = useState(null); // nom du joueur à confirmer
+  const [resetting, setResetting] = useState(false);
+  useEffect(()=>{
+    if (!db) return;
+    const ref = db.ref("users");
+    const handler = snap=>{
+      const raw = snap.val() || {};
+      const list = Object.values(raw).sort((a,b)=>{
+        if ((b.wins||0)!==(a.wins||0)) return (b.wins||0)-(a.wins||0);
+        if ((b.bestStreak||0)!==(a.bestStreak||0)) return (b.bestStreak||0)-(a.bestStreak||0);
+        return (a.name||"").localeCompare(b.name||"","fr");
+      });
+      setUsers(list);
+    };
+    ref.on("value", handler);
+    return ()=>ref.off("value", handler);
+  },[]);
+
+  const resetStats = (name) => {
+    setResetting(true);
+    db.ref("users/"+name).update({
+      wins:0, gamesPlayed:0, streak:0, bestStreak:0,
+      winsEasy:0, winsMedium:0, winsNormal:0
+    }).finally(()=>{ setResetting(false); setResetTarget(null); });
+  };
+
+  return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"1rem"}}>
+      <div style={{maxWidth:880,width:"100%"}}>
+        <button className="back-btn" style={{marginBottom:"1.2rem",display:"block"}} onClick={onBack}>← Retour</button>
+        <div style={{background:"rgba(255,255,255,0.04)",border:"2px solid rgba(255,255,255,0.1)",borderRadius:18,padding:"1.5rem"}}>
+          <div style={{fontSize:"1.55rem",fontWeight:900,color:"#f7c948",marginBottom:"0.35rem"}}>Joueurs et statistiques</div>
+          <div style={{fontSize:"0.82rem",color:"rgba(240,232,200,0.48)",marginBottom:"1.1rem"}}>
+            {users.length} profil{users.length!==1?"s":""} enregistré{users.length!==1?"s":""}
+            <span style={{color:"rgba(240,232,200,0.3)",marginLeft:8}}>— Clique sur un joueur pour voir les options</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:"0.85rem"}}>
+            {users.map(u=>{
+              const rate = u.gamesPlayed ? Math.round((u.wins/u.gamesPlayed)*100) : 0;
+              const isTarget = resetTarget===u.name;
+              return (
+                <div key={u.name} style={{background:"rgba(255,255,255,0.035)",border:isTarget?"1px solid rgba(255,80,80,0.5)":"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"1rem",transition:"border-color 0.2s"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:"0.85rem",marginBottom:"0.85rem"}}>
+                    <FlameAvatar photo={u.photo} name={u.name} streak={u.streak||0} bestStreak={u.bestStreak||0} size={58}/>
+                    <div style={{minWidth:0,flex:1}}>
+                      <div style={{fontWeight:800,fontSize:"1rem",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{u.name}</div>
+                      <div style={{fontSize:"0.75rem",color:"rgba(240,232,200,0.4)"}}>🏆 {u.wins||0} victoire{(u.wins||0)!==1?"s":""}</div>
+                    </div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:"0.55rem",marginBottom:"0.75rem"}}>
+                    <div style={{background:"rgba(0,0,0,0.18)",borderRadius:10,padding:"0.65rem"}}>
+                      <div style={{fontSize:"1.1rem",fontWeight:900,color:"#5cc8e0"}}>{u.gamesPlayed||0}</div>
+                      <div style={{fontSize:"0.68rem",color:"rgba(240,232,200,0.42)",textTransform:"uppercase"}}>Parties</div>
+                    </div>
+                    <div style={{background:"rgba(0,0,0,0.18)",borderRadius:10,padding:"0.65rem"}}>
+                      <div style={{fontSize:"1.1rem",fontWeight:900,color:"#7de08a"}}>{rate}%</div>
+                      <div style={{fontSize:"0.68rem",color:"rgba(240,232,200,0.42)",textTransform:"uppercase"}}>Taux</div>
+                    </div>
+                    <div style={{background:"rgba(0,0,0,0.18)",borderRadius:10,padding:"0.65rem"}}>
+                      <div style={{fontSize:"1.1rem",fontWeight:900,color:"#f7c948"}}>{u.streak||0}</div>
+                      <div style={{fontSize:"0.68rem",color:"rgba(240,232,200,0.42)",textTransform:"uppercase"}}>Serie</div>
+                    </div>
+                    <div style={{background:"rgba(0,0,0,0.18)",borderRadius:10,padding:"0.65rem"}}>
+                      <div style={{fontSize:"1.1rem",fontWeight:900,color:"#e09a5c"}}>{u.bestStreak||0}</div>
+                      <div style={{fontSize:"0.68rem",color:"rgba(240,232,200,0.42)",textTransform:"uppercase"}}>Record</div>
+                    </div>
+                  </div>
+                  {!isTarget && (
+                    <button onClick={()=>setResetTarget(u.name)} style={{width:"100%",padding:"0.5rem",background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.35)",borderRadius:8,color:"rgba(255,120,120,0.85)",fontSize:"0.78rem",cursor:"pointer",fontWeight:700}}>
+                      🗑️ Réinitialiser les stats
+                    </button>
+                  )}
+                  {isTarget && (
+                    <div style={{display:"flex",gap:"0.5rem"}}>
+                      <button onClick={()=>resetStats(u.name)} disabled={resetting} style={{flex:1,padding:"0.5rem",background:"rgba(255,60,60,0.25)",border:"1px solid rgba(255,60,60,0.6)",borderRadius:8,color:"#ff6060",fontSize:"0.78rem",cursor:"pointer",fontWeight:900}}>
+                        {resetting?"...":"Confirmer"}
+                      </button>
+                      <button onClick={()=>setResetTarget(null)} style={{flex:1,padding:"0.5rem",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,color:"rgba(240,232,200,0.6)",fontSize:"0.78rem",cursor:"pointer"}}>
+                        Annuler
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+//  ONGLET HISTORIQUE
+// ================================================================
+function HistoriqueTab({lastSessionSummary, userMap, lastLeaderName, onJoin}) {
+  const [copied, setCopied] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const copyCode = () => {
+    if (!lastSessionSummary) return;
+    navigator.clipboard&&navigator.clipboard.writeText(lastSessionSummary.code).then(()=>{
+      setCopied(true); setTimeout(()=>setCopied(false), 2000);
+    });
+  };
+  return (
+    <div style={{background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"1rem"}}>
+      <div style={{fontSize:"1rem",fontWeight:900,color:"#f7c948",marginBottom:"0.35rem"}}>Dernière session jouée</div>
+      <div style={{fontSize:"0.74rem",color:"rgba(240,232,200,0.42)",marginBottom:"0.95rem"}}>Rejoins la même session directement</div>
+      {!lastSessionSummary ? (
+        <div style={{fontSize:"0.82rem",color:"rgba(240,232,200,0.45)",lineHeight:1.6}}>
+          Aucune session terminée n'a encore été enregistrée.
+        </div>
+      ) : (
+        <div style={{display:"flex",flexDirection:"column",gap:"0.9rem"}}>
+          {/* Code cliquable */}
+          <div style={{background:"rgba(0,0,0,0.22)",borderRadius:12,padding:"1rem",textAlign:"center",cursor:"pointer"}} onClick={copyCode}>
+            <div style={{fontSize:"0.68rem",color:"rgba(240,232,200,0.42)",textTransform:"uppercase",marginBottom:"0.5rem"}}>Code de session</div>
+            <div style={{fontSize:"2rem",fontWeight:900,color:"#f7c948",letterSpacing:"0.35em",fontFamily:"Georgia,serif",textShadow:"0 0 15px rgba(247,201,72,0.4)"}}>{lastSessionSummary.code}</div>
+            <div style={{fontSize:"0.72rem",color:copied?"#7de08a":"rgba(240,232,200,0.35)",marginTop:"0.4rem",transition:"color 0.2s"}}>{copied?"✓ Code copié !":"Appuie pour copier"}</div>
+          </div>
+          {/* Bouton rejoindre */}
+          <button className="btn" onClick={()=>{ setJoining(true); onJoin(lastSessionSummary.code).finally(()=>setJoining(false)); }} disabled={joining} style={{width:"100%",padding:"0.85rem",fontSize:"0.95rem"}}>
+            {joining?"...":"→ Rejoindre cette session"}
+          </button>
+          {/* Gagnant */}
+          <div style={{background:"rgba(0,0,0,0.16)",borderRadius:12,padding:"0.85rem"}}>
+            <div style={{fontSize:"0.72rem",color:"rgba(240,232,200,0.42)",textTransform:"uppercase",marginBottom:"0.45rem"}}>Joueur mis en avant</div>
+            <div style={{display:"flex",alignItems:"center",gap:"0.8rem"}}>
+              <FlameAvatar
+                photo={lastLeaderName&&userMap[lastLeaderName]?userMap[lastLeaderName].photo:null}
+                name={lastLeaderName||"?"}
+                streak={lastLeaderName&&userMap[lastLeaderName]?userMap[lastLeaderName].streak:0}
+                bestStreak={lastLeaderName&&userMap[lastLeaderName]?userMap[lastLeaderName].bestStreak:0}
+                size={52}
+              />
+              <div style={{minWidth:0}}>
+                <div style={{fontWeight:900,fontSize:"0.98rem",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                  {lastSessionSummary.winner?(lastSessionSummary.winner):(lastSessionSummary.topLinePlayer||"Aucun")}
+                </div>
+                <div style={{fontSize:"0.76rem",color:"rgba(240,232,200,0.52)"}}>
+                  {lastSessionSummary.winner?"Gagnant de la session":"Meilleur total lignes/colonnes"}
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Mode + joueurs */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:"0.7rem"}}>
+            <div style={{background:"rgba(0,0,0,0.16)",borderRadius:12,padding:"0.75rem"}}>
+              <div style={{fontSize:"0.68rem",color:"rgba(240,232,200,0.42)",textTransform:"uppercase"}}>Mode</div>
+              <div style={{fontWeight:800,marginTop:5}}>{getDifficultyConfig(lastSessionSummary.difficulty).label}</div>
+              <div style={{fontSize:"0.72rem",color:"rgba(240,232,200,0.45)",marginTop:3}}>{lastSessionSummary.powerMode?"Pouvoirs actifs":"Mode classique"}</div>
+            </div>
+            <div style={{background:"rgba(0,0,0,0.16)",borderRadius:12,padding:"0.75rem"}}>
+              <div style={{fontSize:"0.68rem",color:"rgba(240,232,200,0.42)",textTransform:"uppercase",marginBottom:"0.4rem"}}>Joueurs</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:"0.35rem"}}>
+                {(lastSessionSummary.players||[]).map(name=>{
+                  const user = userMap[name];
+                  return (
+                    <div key={name} title={name} style={{display:"flex",alignItems:"center",gap:"0.3rem",background:"rgba(255,255,255,0.04)",borderRadius:999,padding:"0.2rem 0.45rem"}}>
+                      <FlameAvatar photo={user&&user.photo} name={name} streak={(user&&user.streak)||0} bestStreak={(user&&user.bestStreak)||0} size={20}/>
+                      <span style={{fontSize:"0.72rem",maxWidth:70,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ================================================================
+//  LOBBY
+// ================================================================
+function LobbyScreen({player, onProfile, onCreate, onJoin, onWords, allUsers, lastSessionSummary}) {
+  const [code, setCode] = useState("");
+  const [joining, setJoining] = useState(false);
+  const [sortKey, setSortKey] = useState("wins");
+  const tryJoin = () => {
+    if (!code.trim()) return;
+    setJoining(true);
+    onJoin(code.trim()).finally(()=>setJoining(false));
+  };
+  const leaderboard = [...(allUsers||[])].filter(u=>!EXCLUDED_PLAYERS.includes((u.name||"").trim().toLowerCase())).sort((a,b)=>{
+    const diff = getLeaderboardValue(b, sortKey) - getLeaderboardValue(a, sortKey);
+    if (diff!==0) return diff;
+    return (a.name||"").localeCompare(b.name||"","fr");
+  });
+  const userMap = leaderboard.reduce((acc, user)=>{
+    acc[user.name] = user;
+    return acc;
+  }, {});
+  // userMap complet pour l'historique (inclut tous les joueurs)
+  const allUserMap = (allUsers||[]).reduce((acc, user)=>{ acc[user.name]=user; return acc; }, {});
+  const lastLeaderName = (lastSessionSummary&&lastSessionSummary.winner) || (lastSessionSummary&&lastSessionSummary.topLinePlayer) || null;
+  const [activeTab, setActiveTab] = useState("jouer");
+  const [slideDir, setSlideDir] = useState("left");
+  const TAB_ORDER = ["jouer","classement","historique"];
+  const TABS = [{key:"jouer",label:"🎲 Jouer"},{key:"classement",label:"🏆 Classement"},{key:"historique",label:"📜 Historique"}];
+  const handleTabChange = (key) => {
+    const from = TAB_ORDER.indexOf(activeTab);
+    const to = TAB_ORDER.indexOf(key);
+    setSlideDir(to > from ? "left" : "right");
+    setActiveTab(key);
+  };
+  const slideClass = slideDir === "left" ? "tab-slide-left" : "tab-slide-right";
+  return (
+    <div style={{minHeight:"100vh",padding:"1rem"}}>
+      <div style={{maxWidth:540,margin:"0 auto"}}>
+
+        {/* Barre d'onglets */}
+        <div style={{display:"flex",gap:"0.4rem",marginBottom:"1.2rem",background:"rgba(0,0,0,0.25)",borderRadius:12,padding:"0.3rem"}}>
+          {TABS.map(tab=>(
+            <button key={tab.key} onClick={()=>handleTabChange(tab.key)} style={{
+              flex:1,padding:"0.6rem 0.3rem",border:"none",borderRadius:9,cursor:"pointer",
+              fontWeight:700,fontSize:"0.8rem",transition:"all 0.18s",
+              background: activeTab===tab.key ? "#f7c948" : "transparent",
+              color: activeTab===tab.key ? "#1a2e1a" : "rgba(240,232,200,0.55)"
+            }}>{tab.label}</button>
+          ))}
+        </div>
+
+        {/* ---- ONGLET JOUER ---- */}
+        {activeTab==="jouer" && <div className={slideClass}>
+          <div onClick={onProfile} style={{display:"flex",alignItems:"center",gap:"1rem",marginBottom:"2rem",cursor:"pointer",padding:"0.9rem 1.1rem",background:"rgba(255,255,255,0.04)",borderRadius:14,border:"1.5px solid rgba(255,255,255,0.08)"}}>
+          <FlameAvatar photo={player.photo} name={player.name} streak={player.streak||0} bestStreak={player.bestStreak||0} size={46}/>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:700,fontSize:"1rem"}}>{player.name}</div>
+            <div style={{fontSize:"0.75rem",color:"rgba(240,232,200,0.38)",marginTop:2}}>🏆 {player.wins||0} victoire{(player.wins||0)!==1?"s":""} - Modifier</div>
+          </div>
+        </div>
+        <div style={{textAlign:"center",marginBottom:"2.5rem"}}>
+          <div style={{fontSize:"clamp(2rem,7vw,4rem)",fontFamily:"Georgia,serif",fontWeight:900,letterSpacing:"0.2em",color:"#f7c948",textShadow:"0 0 30px rgba(247,201,72,0.3)",lineHeight:1.1}}>{GAME_NAME}</div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
+          <button className="btn" onClick={onCreate} style={{width:"100%",fontSize:"1.05rem",padding:"1rem"}}>+ Créer une session</button>
+          <button className="btn-ghost" onClick={onWords} style={{width:"100%",fontSize:"0.95rem",padding:"0.9rem"}}>Voir tous les mots</button>
+          <div style={{textAlign:"center",color:"rgba(240,232,200,0.22)",fontSize:"0.8rem"}}>ou rejoins une session</div>
+          <div style={{display:"flex",gap:"0.7rem"}}>
+            <input placeholder="Code de session..." value={code} onChange={e=>setCode(e.target.value.toUpperCase())} onKeyDown={e=>e.key==="Enter"&&tryJoin()} style={{flex:1,width:"auto",letterSpacing:"0.2em",fontWeight:700,textTransform:"uppercase"}}/>
+            <button className="btn" disabled={!code.trim()||joining} onClick={tryJoin} style={{marginTop:0,padding:"0.75rem 1.1rem",flexShrink:0,width:"auto"}}>{joining?"...":"→"}</button>
+          </div>
+        </div>
+        </div>}
+
+        {/* ---- ONGLET CLASSEMENT ---- */}
+        {activeTab==="classement" && <div className={slideClass} style={{background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"1rem"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"0.7rem",marginBottom:"0.9rem"}}>
+            <div>
+              <div style={{fontSize:"1rem",fontWeight:900,color:"#f7c948"}}>Classement global</div>
+              <div style={{fontSize:"0.74rem",color:"rgba(240,232,200,0.42)"}}>Tous les joueurs enregistrés</div>
+            </div>
+            <select value={sortKey} onChange={e=>setSortKey(e.target.value)} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(247,201,72,0.35)",borderRadius:8,color:"#f0e8c8",padding:"0.45rem 0.6rem",fontSize:"0.82rem"}}>
+              {LEADERBOARD_OPTIONS.map(option=><option key={option.key} value={option.key} style={{color:"#1a2e1a"}}>{option.label}</option>)}
+            </select>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:"0.65rem"}}>
+            {leaderboard.length===0 && (
+              <div style={{fontSize:"0.82rem",color:"rgba(240,232,200,0.45)",padding:"0.9rem 0.2rem"}}>
+                Aucun profil enregistré pour le moment.
+              </div>
+            )}
+            {leaderboard.map((user, index)=>(
+              <div key={user.name} style={{display:"flex",alignItems:"center",gap:"0.75rem",padding:"0.75rem",borderRadius:12,background:"rgba(0,0,0,0.16)",border:"1px solid rgba(255,255,255,0.05)"}}>
+                <div style={{width:26,textAlign:"center",fontWeight:900,color:index<3?"#f7c948":"rgba(240,232,200,0.6)"}}>{index+1}</div>
+                <FlameAvatar photo={user.photo} name={user.name} streak={user.streak||0} bestStreak={user.bestStreak||0} size={42}/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontWeight:800,fontSize:"0.92rem",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{user.name}</div>
+                  <div style={{fontSize:"0.72rem",color:"rgba(240,232,200,0.42)"}}>
+                    {LEADERBOARD_OPTIONS.find(option=>option.key===sortKey).label}
+                  </div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontWeight:900,color:sortKey==="winRate" ? "#7de08a" : "#f7c948",fontSize:"1rem"}}>
+                    {getLeaderboardValue(user, sortKey)}{sortKey==="winRate" ? "%" : ""}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>}
+
+        {/* ---- ONGLET HISTORIQUE ---- */}
+        {activeTab==="historique" && <HistoriqueTab lastSessionSummary={lastSessionSummary} userMap={allUserMap} lastLeaderName={lastLeaderName} onJoin={onJoin}/>}
+
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+//  INVITATION
+// ================================================================
+function InviteButton({sessionCode, sessionData}) {
+  const [lastSent, setLastSent] = useState(0);
+  const [sent, setSent] = useState(false);
+  const COOLDOWN = 60000; // 60 secondes anti-spam
+
+  const sendInvite = () => {
+    const now = Date.now();
+    if (now - lastSent < COOLDOWN) return;
+    setLastSent(now);
+    setSent(true);
+    db.ref("meta/invite").set({
+      sessionCode,
+      host: (sessionData&&sessionData.host) || "?",
+      difficulty: (sessionData&&sessionData.difficulty) || "normal",
+      powerMode: !!(sessionData&&sessionData.powerMode),
+      sentAt: now
+    });
+    setTimeout(()=>setSent(false), 4000);
+  };
+
+  const remaining = Math.max(0, Math.ceil((COOLDOWN - (Date.now()-lastSent))/1000));
+  const canSend = Date.now()-lastSent >= COOLDOWN;
+
+  return (
+    <button
+      className="btn-ghost"
+      onClick={sendInvite}
+      disabled={!canSend}
+      style={{width:"100%",marginTop:"0.6rem",padding:"0.75rem",fontSize:"0.9rem",opacity:canSend?1:0.5}}
+    >
+      {sent ? "📣 Invitations envoyées !" : canSend ? "📣 Inviter les joueurs en ligne" : "📣 Invitation envoyée ("+remaining+"s)"}
+    </button>
+  );
+}
+
+function InvitePopup({invite, player, onJoin, onDismiss}) {
+  if (!invite || !invite.sessionCode || invite.sessionCode==="" ) return null;
+  // Ne pas afficher à soi-même (l'hôte)
+  if (invite.host === player.name) return null;
+  const cfg = invite.difficulty ? ({"easy":"Facile","medium":"Moyen","normal":"Normal"}[invite.difficulty]||"Normal") : "Normal";
+  return (
+    <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",zIndex:2000,padding:"0 1rem",width:"100%",maxWidth:420,animation:"slideDown 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>
+      <div style={{background:"rgba(10,25,10,0.97)",border:"2px solid rgba(247,201,72,0.6)",borderRadius:18,padding:"1.1rem 1.3rem",boxShadow:"0 8px 40px rgba(0,0,0,0.7)",backdropFilter:"blur(14px)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:"0.9rem"}}>
+          <div style={{fontSize:"2rem"}}>📣</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:900,color:"#f7c948",fontSize:"0.95rem",marginBottom:2}}>
+              {invite.host} invite à rejoindre !
+            </div>
+            <div style={{fontSize:"0.78rem",color:"rgba(240,232,200,0.6)"}}>
+              {cfg} {invite.powerMode?"· Pouvoirs actifs":""}
+            </div>
+          </div>
+          <button onClick={onDismiss} style={{background:"none",border:"none",color:"rgba(240,232,200,0.4)",cursor:"pointer",fontSize:"1.2rem",padding:"0.2rem"}}>✕</button>
+        </div>
+        <div style={{display:"flex",gap:"0.6rem",marginTop:"0.9rem"}}>
+          <button className="btn" style={{flex:1,padding:"0.7rem",fontSize:"0.9rem"}} onClick={()=>onJoin(invite.sessionCode)}>
+            → Rejoindre
+          </button>
+          <button className="btn-ghost" style={{padding:"0.7rem 1rem",fontSize:"0.9rem"}} onClick={onDismiss}>
+            Plus tard
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+//  SALLE D'ATTENTE
+// ================================================================
+function WaitingScreen({sessionCode, sessionData, player, onStart, onLeave, onConfigChange}) {
+  const players = Object.keys((sessionData&&sessionData.players)||{});
+  const isHost = sessionData&&sessionData.host===player.name;
+  const canStart = players.length >= 2;
+  const difficulty = (sessionData&&sessionData.difficulty) || "normal";
+  const powerMode = !!(sessionData&&sessionData.powerMode);
+  const duration = (sessionData&&sessionData.duration) || null;
+  const [copied, setCopied] = useState(false);
+  const copy = () => navigator.clipboard&&navigator.clipboard.writeText(sessionCode).then(()=>{ setCopied(true); setTimeout(()=>setCopied(false),2500); });
+  return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"1rem"}}>
+      <div style={{maxWidth:540,width:"100%",textAlign:"center"}}>
+        <button className="back-btn" style={{marginBottom:"1.8rem",display:"block"}} onClick={onLeave}>← Quitter</button>
+        <div style={{marginBottom:"2rem"}}>
+          <div style={{fontSize:"0.78rem",color:"rgba(240,232,200,0.38)",marginBottom:"0.6rem",letterSpacing:"0.12em",textTransform:"uppercase"}}>Code de session</div>
+          <div onClick={copy} style={{fontSize:"clamp(2.2rem,8vw,4rem)",fontWeight:900,letterSpacing:"0.45em",color:"#f7c948",fontFamily:"Georgia,serif",cursor:"pointer",textShadow:"0 0 20px rgba(247,201,72,0.4)",lineHeight:1.1,userSelect:"all"}}>{sessionCode}</div>
+          <div style={{fontSize:"0.75rem",color:"rgba(240,232,200,0.28)",marginTop:"0.45rem"}}>{copied?"Copié !":"Clique pour copier"}</div>
+        </div>
+        <div style={{background:"rgba(255,255,255,0.04)",border:"2px solid rgba(255,255,255,0.09)",borderRadius:14,padding:"1.6rem",marginBottom:"1.6rem"}}>
+          <div style={{fontSize:"0.78rem",color:"rgba(240,232,200,0.4)",marginBottom:"1.4rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>
+            Joueurs ({players.length}{players.length<2?" / 2 min":""})
+          </div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:"1.4rem",justifyContent:"center",alignItems:"flex-end"}}>
+            {players.map(p=><PlayerCard key={p} name={p} isHost={p===(sessionData&&sessionData.host)}/>)}
+            {players.length<2&&(
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"0.45rem"}}>
+                <div style={{width:58,height:58,borderRadius:"50%",border:"2px dashed rgba(240,232,200,0.14)",display:"flex",alignItems:"center",justifyContent:"center",color:"rgba(240,232,200,0.2)",fontSize:"1.6rem"}}>+</div>
+                <div style={{fontSize:"0.75rem",color:"rgba(240,232,200,0.25)"}}>En attente...</div>
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={{background:"rgba(255,255,255,0.04)",border:"2px solid rgba(255,255,255,0.09)",borderRadius:14,padding:"1.2rem",marginBottom:"1.4rem",textAlign:"left"}}>
+          <div style={{fontSize:"0.78rem",color:"rgba(240,232,200,0.4)",marginBottom:"0.9rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>
+            Réglages de partie
+          </div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:"0.55rem",marginBottom:"0.9rem"}}>
+            {DIFFICULTY_ORDER.map(key=>{
+              const cfg = DIFFICULTY_CONFIGS[key];
+              const active = difficulty===key;
+              return (
+                <button
+                  key={key}
+                  className={active?"btn":"btn-ghost"}
+                  disabled={!isHost}
+                  onClick={()=>onConfigChange({difficulty:key})}
+                  style={{padding:"0.65rem 0.95rem",fontSize:"0.86rem"}}
+                >
+                  {cfg.label}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:"0.55rem",marginBottom:"0.9rem"}}>
+            <button
+              className={powerMode?"btn":"btn-ghost"}
+              disabled={!isHost}
+              onClick={()=>onConfigChange({powerMode:!powerMode})}
+              style={{padding:"0.65rem 0.95rem",fontSize:"0.86rem"}}
+            >
+              ⚡ Mode Pouvoir
+            </button>
+          </div>
+          {/* Durée de partie */}
+          <div style={{marginBottom:"0.9rem"}}>
+            <div style={{fontSize:"0.72rem",color:"rgba(240,232,200,0.38)",marginBottom:"0.5rem",textTransform:"uppercase",letterSpacing:"0.08em"}}>⏱ Durée de partie</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem"}}>
+              {DURATION_OPTIONS.map(opt=>{
+                const active = duration===opt.value;
+                return (
+                  <button
+                    key={String(opt.value)}
+                    className={active?"btn":"btn-ghost"}
+                    disabled={!isHost}
+                    onClick={()=>onConfigChange({duration:opt.value})}
+                    style={{padding:"0.5rem 0.75rem",fontSize:"0.78rem"}}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{fontSize:"0.8rem",color:"rgba(240,232,200,0.55)",lineHeight:1.55}}>
+            Partie actuelle : <span style={{color:"#f7c948",fontWeight:700}}>{getDifficultyConfig(difficulty).label} {getBoardSize(sessionData)}x{getBoardSize(sessionData)}</span>
+            {" - "}
+            <span style={{color:powerMode?"#5cc8e0":"rgba(240,232,200,0.65)",fontWeight:700}}>
+              {powerMode?"Mode Pouvoir":"Mode classique"}
+            </span>
+            {" - "}
+            <span style={{color:"rgba(240,232,200,0.55)",fontWeight:700}}>
+              {duration ? (DURATION_OPTIONS.find(o=>o.value===duration)||{label:"?"}).label : "Sans limite"}
+            </span>
+          </div>
+          <div style={{fontSize:"0.75rem",color:"rgba(240,232,200,0.35)",lineHeight:1.55,marginTop:"0.35rem"}}>
+            Les victoires comptent dans tous les modes. Les séries et records ne comptent que pour les parties 5x5.
+          </div>
+        </div>
+        {isHost
+          ? <button className="btn" onClick={onStart} disabled={!canStart} style={{width:"100%",fontSize:"1.05rem",padding:"1rem"}}>
+              {canStart?"🎲 Lancer la partie !":"En attente de joueurs..."}
+            </button>
+          : <div style={{color:"rgba(240,232,200,0.38)",fontStyle:"italic",fontSize:"0.9rem",padding:"0.5rem"}}>
+              En attente que l'hôte lance...
+            </div>
+        }
+        {/* Bouton inviter les joueurs en ligne */}
+        {isHost && <InviteButton sessionCode={sessionCode} sessionData={sessionData}/>}
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+//  ECRAN RETARD (rejoint une partie en cours)
+// ================================================================
+function LateJoinScreen({sessionData, player, onLeave}) {
+  const players = Object.keys((sessionData&&sessionData.players)||{});
+  const funny = [
+    "T'as sonné la récré ou quoi ?",
+    "Ah, te voilà ! On croyait que t'avais séché.",
+    "Regarde qui daigne enfin arriver...",
+    "Le roi/la reine arrive. Enfin.",
+    "T'étais aux toilettes depuis le début ?"
+  ];
+  const [phrase] = useState(()=>funny[Math.floor(Math.random()*funny.length)]);
+  return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"1.5rem"}}>
+      <div style={{maxWidth:500,width:"100%",textAlign:"center"}}>
+        <button className="back-btn" style={{marginBottom:"2rem",display:"block"}} onClick={onLeave}>← Quitter</button>
+
+        <div style={{fontSize:"3.5rem",marginBottom:"0.5rem",animation:"float 2s ease-in-out infinite"}}>⏳</div>
+        <h2 style={{color:"#f7c948",fontSize:"clamp(1.2rem,4vw,1.7rem)",fontWeight:900,marginBottom:"0.5rem"}}>Partie en cours !</h2>
+        <p style={{color:"rgba(240,232,200,0.5)",fontSize:"0.9rem",marginBottom:"0.3rem",fontStyle:"italic"}}>{phrase}</p>
+        <p style={{color:"rgba(240,232,200,0.35)",fontSize:"0.8rem",marginBottom:"2rem"}}>Tu rejoindras automatiquement à la prochaine partie.</p>
+
+        {/* Joueurs en cours */}
+        <div style={{background:"rgba(255,255,255,0.04)",border:"2px solid rgba(255,255,255,0.09)",borderRadius:14,padding:"1.6rem",marginBottom:"1.8rem"}}>
+          <div style={{fontSize:"0.75rem",color:"rgba(240,232,200,0.4)",marginBottom:"1.2rem",textTransform:"uppercase",letterSpacing:"0.1em"}}>
+            Joueurs actuellement en jeu
+          </div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:"1.2rem",justifyContent:"center",alignItems:"flex-end"}}>
+            {players.map(p=><PlayerCard key={p} name={p} isHost={p===(sessionData&&sessionData.host)}/>)}
+          </div>
+        </div>
+
+        {/* Message signature */}
+        <div style={{
+          background:"rgba(247,201,72,0.05)",
+          border:"1.5px solid rgba(247,201,72,0.2)",
+          borderRadius:12, padding:"1.1rem 1.4rem",
+          color:"rgba(240,232,200,0.55)", fontSize:"0.82rem", lineHeight:1.7,
+          fontStyle:"italic"
+        }}>
+          <span style={{color:"#f7c948",fontWeight:700,fontStyle:"normal"}}>Site fait par Matys</span>
+          {" "}et le seul, l'unique{" "}
+          <span style={{color:"#f7c948",fontWeight:700,fontStyle:"normal"}}>Claude</span>
+          {" "}✨<br/>
+          <span style={{fontSize:"0.75rem",color:"rgba(240,232,200,0.3)"}}>Patiente, la prochaine partie arrive...</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WordsScreen({onBack, player, wordLists, wordSuggestions, onSuggestWord, onVoteSuggestion}) {
+  const [draftWord, setDraftWord] = useState("");
+  const words = [...getWordPool(wordLists)].sort((a,b)=>a.localeCompare(b,"fr"));
+  const suggestions = Object.entries(wordSuggestions||{})
+    .map(([id, suggestion])=>({id, ...suggestion, score:Object.values((suggestion&&suggestion.votes)||{}).reduce((sum,val)=>sum+(val||0),0)}))
+    .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"1rem"}}>
+      <div style={{maxWidth:760,width:"100%"}}>
+        <button className="back-btn" style={{marginBottom:"1.2rem",display:"block"}} onClick={onBack}>← Retour</button>
+        <div style={{background:"rgba(255,255,255,0.04)",border:"2px solid rgba(255,255,255,0.1)",borderRadius:18,padding:"1.5rem"}}>
+          <div style={{fontSize:"1.6rem",fontWeight:900,color:"#f7c948",marginBottom:"0.75rem"}}>Tous les mots du bingo</div>
+          <div style={{fontSize:"0.82rem",color:"rgba(240,232,200,0.45)",marginBottom:"1.2rem"}}>
+            {words.length} mots disponibles pour générer les grilles.
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:"0.65rem"}}>
+            {words.map(word=>(
+              <div key={word} style={{
+                background:"rgba(255,255,255,0.035)",border:"1px solid rgba(255,255,255,0.08)",
+                borderRadius:10,padding:"0.7rem 0.85rem",fontSize:"0.9rem",lineHeight:1.35
+              }}>
+                {word}
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:"1.4rem",paddingTop:"1.2rem",borderTop:"1px solid rgba(255,255,255,0.08)"}}>
+            <div style={{fontSize:"1.15rem",fontWeight:800,color:"#f7c948",marginBottom:"0.35rem"}}>Liste d'attente des propositions</div>
+            <div style={{fontSize:"0.8rem",color:"rgba(240,232,200,0.45)",marginBottom:"0.9rem"}}>
+              +3 votes ajoute le mot à la liste officielle, -3 votes supprime la proposition.
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:"0.65rem",marginBottom:"1rem"}}>
+              {suggestions.length===0 && (
+                <div style={{background:"rgba(255,255,255,0.03)",border:"1px dashed rgba(255,255,255,0.1)",borderRadius:12,padding:"0.9rem",fontSize:"0.85rem",color:"rgba(240,232,200,0.42)"}}>
+                  Aucune proposition en attente.
+                </div>
+              )}
+              {suggestions.map(suggestion=>{
+                const myVote = ((suggestion.votes||{})[player.name]) || 0;
+                return (
+                  <div key={suggestion.id} style={{display:"flex",alignItems:"center",gap:"0.75rem",background:"rgba(255,255,255,0.035)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"0.8rem 0.9rem",flexWrap:"wrap"}}>
+                    <div style={{flex:1,minWidth:180}}>
+                      <div style={{fontWeight:700}}>{suggestion.word}</div>
+                      <div style={{fontSize:"0.74rem",color:"rgba(240,232,200,0.42)"}}>Proposé par {suggestion.createdBy||"?"} - Score {suggestion.score}</div>
+                    </div>
+                    <div style={{display:"flex",gap:"0.45rem"}}>
+                      <button className={myVote===1?"btn":"btn-ghost"} onClick={()=>onVoteSuggestion(suggestion.id,1)} style={{padding:"0.55rem 0.8rem",fontSize:"0.84rem"}}>👍</button>
+                      <button className={myVote===-1?"btn":"btn-ghost"} onClick={()=>onVoteSuggestion(suggestion.id,-1)} style={{padding:"0.55rem 0.8rem",fontSize:"0.84rem"}}>👎</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{display:"flex",gap:"0.7rem",alignItems:"stretch"}}>
+              <input value={draftWord} onChange={e=>setDraftWord(e.target.value)} placeholder="Proposer un nouveau mot..." />
+              <button className="btn" onClick={()=>{ onSuggestWord(draftWord); setDraftWord(""); }} disabled={!draftWord.trim()} style={{width:"auto",flexShrink:0}}>Proposer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+//  JEU
+// ================================================================
+function GameScreen({player, card, marked, sessionData, sessionCode, currentNotif, onToggle, onLeave, showConfetti, clearNotif, isLabMode, onLabAction, freezeState, pendingPowerAction, onResolvePowerAction, powerAnim, clearPowerAnim, onEndGame}) {
+  const size = getBoardSize(sessionData);
+  const totalCells = getTotalCells(size);
+  const winLines = getLines(marked, size).filter(l=>l.type!=="diagonale");
+  const isWinCell = i => winLines.some(l=>l.cells.includes(i));
+  const players = Object.keys((sessionData&&sessionData.players)||{});
+  const progress = Math.round((marked.size/totalCells)*100);
+  const isGameOver = !!(sessionData&&sessionData.winner);
+  const powerMode = !!(sessionData&&sessionData.powerMode) && !isLabMode;
+  const hasShield = !!((((sessionData||{}).powerState||{}).shields||{})[player.name]);
+  const isHost = (sessionData&&sessionData.host)===player.name;
+  const endsAt = (sessionData&&sessionData.endsAt) || null;
+  const [confirmIndex, setConfirmIndex] = useState(null);
+  const [showStopConfirm, setShowStopConfirm] = useState(false);
+  const [countdown, setCountdown] = useState(null);
+
+  // Countdown timer
+  useEffect(()=>{
+    if (!endsAt || isGameOver) { setCountdown(null); return; }
+    const tick = ()=>{
+      const rem = endsAt - Date.now();
+      setCountdown(rem > 0 ? rem : 0);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return ()=>clearInterval(interval);
+  },[endsAt, isGameOver]);
+
+  const formatCountdown = ms=>{
+    if (ms===null||ms===undefined) return null;
+    const totalSec = Math.max(0, Math.ceil(ms/1000));
+    const h = Math.floor(totalSec/3600);
+    const m = Math.floor((totalSec%3600)/60);
+    const s = totalSec%60;
+    if (h>0) return h+"h"+String(m).padStart(2,"0")+"m"+String(s).padStart(2,"0")+"s";
+    return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+  };
+  const [selectedSabTarget, setSelectedSabTarget] = useState("");
+  useEffect(()=>{
+    setSelectedSabTarget("");
+  },[pendingPowerAction&&pendingPowerAction.type, pendingPowerAction&&pendingPowerAction.owner]);
+
+  // Validation automatique du trap quand tous les joueurs ont voté oui
+  useEffect(()=>{
+    if (isLabMode) return;
+    const allTraps = (sessionData&&sessionData.trapCells&&sessionData.trapCells[player.name])||{};
+    const pendingEntry = Object.entries(allTraps).find(([,t])=>t&&t.pending&&t.gageDone);
+    if (!pendingEntry) return;
+    const [trapIdx, trapInfo] = pendingEntry;
+    const totalPlayers = players.length;
+    if (totalPlayers < 2) return;
+    const votes = trapInfo.voters || {};
+    const yesVotes = Object.values(votes).filter(v=>v===true).length;
+    const allVoted = Object.keys(votes).length >= totalPlayers - 1;
+    if (allVoted && yesVotes === totalPlayers - 1) {
+      // Tous ont validé → cocher la case et supprimer le trap
+      db.ref("sessions/"+sessionCode+"/trapCells/"+player.name+"/"+trapIdx).remove();
+      const idx = Number(trapIdx);
+      if (!marked.has(idx)) onToggle(idx);
+    }
+  },[sessionData&&sessionData.trapCells, players.length]);
+  useEffect(()=>{
+    if (confirmIndex===null) return;
+    if ((sessionData&&sessionData.winner) || !card[confirmIndex]) setConfirmIndex(null);
+  },[confirmIndex,sessionData&&sessionData.winner,card]);
+  const pendingTargets = (pendingPowerAction&&pendingPowerAction.targets) || [];
+  // Sabotage : utilise pendingTargets si dispo, sinon tous les adversaires avec des cases cochées
+  // Ne filtre PAS par getSelectableMarkedIndices pour éviter les désync — on filtre à l'affichage
+  const sabotageTargets = (() => {
+    const pool = (pendingPowerAction&&pendingPowerAction.type==="sabotage" && pendingTargets.length>0)
+      ? pendingTargets
+      : getOtherPlayerNames(sessionData, player.name);
+    return pool.filter(name => {
+      const markedObj = (sessionData&&sessionData.marked&&sessionData.marked[name]) || {};
+      const freeIdx = getFreeIndex(getBoardSize(sessionData));
+      return Object.keys(markedObj).some(k => Number(k) !== freeIdx);
+    });
+  })();
+  const sabotageChoices = selectedSabTarget
+    ? (() => {
+        const markedObj = (sessionData&&sessionData.marked&&sessionData.marked[selectedSabTarget]) || {};
+        const freeIdx = getFreeIndex(getBoardSize(sessionData));
+        const card_target = (sessionData&&sessionData.cards&&sessionData.cards[selectedSabTarget]) || [];
+        return Object.keys(markedObj)
+          .map(Number)
+          .filter(idx => idx !== freeIdx)
+          .map(idx => ({index:idx, label:card_target[idx]||("Case "+(idx+1))}));
+      })()
+    : [];
+  return (
+    <div style={{maxWidth:680,margin:"0 auto",padding:"0.9rem 0.9rem 2rem"}}>
+      {showConfetti&&<Confetti/>}
+      {powerAnim&&<PowerAnimation key={powerAnim.id} type={powerAnim.type} onDone={clearPowerAnim}/>}
+      {currentNotif&&<NotifToast notif={currentNotif} onDone={clearNotif}/>}
+
+      {/* Header */}
+      <div style={{display:"flex",alignItems:"center",gap:"0.7rem",marginBottom:"0.7rem",flexWrap:"wrap"}}>
+        <button className="back-btn" onClick={onLeave}>← Quitter</button>
+        <FlameAvatar photo={player.photo} name={player.name} streak={player.streak||0} bestStreak={player.bestStreak||0} size={31}/>
+        <span style={{fontWeight:600,fontSize:"0.88rem",maxWidth:100,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{player.name}</span>
+        {powerMode && (
+          <span style={{fontSize:"0.72rem",fontWeight:800,color:"#5cc8e0",background:"rgba(92,200,224,0.08)",border:"1px solid rgba(92,200,224,0.28)",borderRadius:999,padding:"0.18rem 0.55rem"}}>
+            ⚡ Mode Pouvoir
+          </span>
+        )}
+        {hasShield && (
+          <span style={{fontSize:"0.72rem",fontWeight:800,color:"#f7c948",background:"rgba(247,201,72,0.08)",border:"1px solid rgba(247,201,72,0.32)",borderRadius:999,padding:"0.18rem 0.55rem"}}>
+            🛡️ Bouclier
+          </span>
+        )}
+        <div style={{marginLeft:"auto",display:"flex",gap:"0.35rem",alignItems:"center"}}>
+          {players.filter(p=>p!==player.name).slice(0,5).map(p=><MiniPlayerBadge key={p} name={p} isHost={p===(sessionData&&sessionData.host)}/>)}
+          <span style={{fontSize:"0.7rem",color:"rgba(240,232,200,0.32)",marginLeft:2}}>{players.length} joueurs</span>
+        </div>
+      </div>
+
+      {/* Countdown + bouton arrêt host */}
+      {(countdown!==null || (isHost && !isGameOver && !isLabMode)) && (
+        <div style={{display:"flex",alignItems:"center",gap:"0.6rem",marginBottom:"0.5rem",flexWrap:"wrap"}}>
+          {countdown!==null && (
+            <div style={{
+              display:"flex",alignItems:"center",gap:"0.4rem",
+              background: countdown<300000 ? "rgba(224,92,92,0.15)" : "rgba(255,255,255,0.06)",
+              border: "1px solid "+(countdown<300000 ? "rgba(224,92,92,0.4)" : "rgba(255,255,255,0.12)"),
+              borderRadius:8, padding:"0.3rem 0.7rem"
+            }}>
+              <span style={{fontSize:"0.75rem",color:countdown<300000?"#e05c5c":"rgba(240,232,200,0.5)"}}>⏱</span>
+              <span style={{fontWeight:900,fontSize:"0.9rem",color:countdown<300000?"#e05c5c":"#f7c948",fontFamily:"monospace"}}>
+                {formatCountdown(countdown)}
+              </span>
+            </div>
+          )}
+          {isHost && !isGameOver && !isLabMode && (
+            <button onClick={()=>setShowStopConfirm(true)} style={{
+              background:"rgba(224,92,92,0.12)",border:"1px solid rgba(224,92,92,0.35)",
+              borderRadius:8,color:"rgba(224,140,140,0.9)",padding:"0.3rem 0.7rem",
+              cursor:"pointer",fontSize:"0.75rem",fontWeight:700
+            }}>⏹ Arrêter</button>
+          )}
+        </div>
+      )}
+      <div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:"0.6rem",overflow:"hidden"}}>
+        <div style={{height:"100%",width:progress+"%",background:"linear-gradient(90deg,#5cc8e0,#f7c948)",borderRadius:2,transition:"width 0.35s ease"}}/>
+      </div>
+
+      {/* BINGO */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat("+size+",1fr)",gap:3,marginBottom:3}}>
+        {getBoardLetters(size).map(l=>(
+          <div key={l} style={{textAlign:"center",fontWeight:900,fontSize:"clamp(1.1rem,3.5vw,1.75rem)",color:"#f7c948",letterSpacing:"0.08em",fontFamily:"Georgia,serif",padding:"0.22rem 0",textShadow:"0 0 10px rgba(247,201,72,0.5)"}}>{l}</div>
+        ))}
+      </div>
+
+      {/* Grille */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat("+size+",1fr)",gap:3,position:"relative"}}>
+        {card.map((cell,i)=>{
+          const isFree = cell==="FREE";
+          const isM = marked.has(i);
+          const isW = isWinCell(i);
+          const isFrozen = !!(freezeState && freezeState.index===i);
+          const ghostCells = (!isLabMode&&sessionData&&sessionData.ghostCells&&sessionData.ghostCells[player.name])||{};
+          const isGhost = !isM && !!ghostCells[String(i)];
+          const trapCells = (!isLabMode&&sessionData&&sessionData.trapCells&&sessionData.trapCells[player.name])||{};
+          const isTrap = !isM && !!trapCells[String(i)] && !trapCells[String(i)].pending;
+          return (
+            <div key={i} onClick={()=>{
+              if (isFree || isGameOver || isFrozen || isM) return;
+              if (isTrap) { onToggle(i); return; } // case piégée → directement handleToggle
+              setConfirmIndex(i);
+            }} style={{
+              aspectRatio:"1",
+              background: isFrozen?"rgba(92,200,224,0.2)":isW?"rgba(247,201,72,0.24)":isM&&!isFree?"rgba(92,200,224,0.14)":isFree?"rgba(247,201,72,0.13)":isTrap?"rgba(180,80,20,0.18)":isGhost?"rgba(140,180,255,0.07)":"rgba(255,255,255,0.04)",
+              border: isFrozen?"1.5px solid rgba(92,200,224,0.92)":isW?"1.5px solid #f7c948":isM&&!isFree?"1.5px solid rgba(92,200,224,0.5)":isFree?"1.5px solid rgba(247,201,72,0.45)":isTrap?"1.5px solid rgba(200,100,30,0.7)":isGhost?"1.5px solid rgba(140,180,255,0.22)":"1.5px solid rgba(255,255,255,0.09)",
+              borderRadius:7, display:"flex", alignItems:"center", justifyContent:"center",
+              padding:"3px", position:"relative",
+              cursor: isFree||isGameOver||isFrozen||isM ? "default" : "pointer",
+              overflow:"hidden", userSelect:"none",
+              transform: isM&&!isFree ? "scale(0.965)" : "scale(1)",
+              transition:"background 0.18s,border-color 0.18s,transform 0.12s",
+              boxShadow: isFrozen ? "0 0 18px rgba(92,200,224,0.3)" : isTrap ? "0 0 12px rgba(200,80,20,0.4)" : isW ? "inset 0 0 10px rgba(247,201,72,0.16)" : "none",
+              animation: isFrozen ? "freezePulse 1.35s ease-in-out infinite" : "none",
+              filter: "none"
+            }}>
+              {isFree
+                ? <span style={{fontSize:"clamp(0.4rem,1.15vw,0.62rem)",color:"#f7c948",fontWeight:900,textAlign:"center"}}>★ FREE ★</span>
+                : <span style={{fontSize:"clamp(0.4rem,1.15vw,0.64rem)",textAlign:"center",lineHeight:1.2,color:isM?"rgba(240,232,200,0.55)":"#f0e8c8",display:"block",width:"100%"}}>{cell}</span>
+              }
+              {isTrap && (
+                <div style={{position:"absolute",top:3,right:3,fontSize:"clamp(0.7rem,2vw,0.95rem)",lineHeight:1,pointerEvents:"none",filter:"drop-shadow(0 0 4px rgba(200,80,20,0.9))"}}>🪤</div>
+              )}
+              {isM&&!isFree&&(
+                <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%) rotate(-15deg)",fontSize:"clamp(1.2rem,3.8vw,2rem)",color:"rgba(92,200,224,0.52)",fontWeight:900,pointerEvents:"none",lineHeight:1,animation:"stamp 0.18s ease"}}>✓</div>
+              )}
+              {isFrozen && (
+                <>
+                  <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg,rgba(92,200,224,0.08),rgba(92,200,224,0.18))",pointerEvents:"none"}}/>
+                  <div style={{position:"absolute",top:6,right:6,fontSize:"0.95rem",lineHeight:1,pointerEvents:"none"}}>❄️</div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{textAlign:"center",marginTop:"0.65rem",color:"rgba(240,232,200,0.25)",fontSize:"0.73rem"}}>
+        {marked.size}/{totalCells} cases — Complète tout le carton pour le BINGO ! — <span style={{opacity:0.6}}>La validation est définitive hors pouvoirs</span>
+      </div>
+      {isLabMode && (
+        <div style={{marginTop:"1rem",background:"rgba(255,255,255,0.04)",border:"2px solid rgba(247,201,72,0.25)",borderRadius:14,padding:"1rem"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:"0.8rem",marginBottom:"0.45rem",flexWrap:"wrap"}}>
+            <div style={{color:"#f7c948",fontWeight:800}}>Panneau de test</div>
+            <div style={{fontSize:"0.74rem",color:"rgba(240,232,200,0.42)"}}>Mode solo laboratoire</div>
+          </div>
+          <div style={{fontSize:"0.82rem",color:"rgba(240,232,200,0.62)",lineHeight:1.55,marginBottom:"0.9rem"}}>
+            Ces boutons utilisent la vraie logique de cochage des cases pour vérifier les notifications de ligne, colonne et la victoire.
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:"0.6rem"}}>
+            <button className="btn" onClick={()=>onLabAction("ligne")} style={{width:"100%",fontSize:"0.88rem",padding:"0.8rem"}}>Compléter une ligne</button>
+            <button className="btn" onClick={()=>onLabAction("colonne")} style={{width:"100%",fontSize:"0.88rem",padding:"0.8rem"}}>Compléter une colonne</button>
+            <button className="btn" onClick={()=>onLabAction("bingo")} style={{width:"100%",fontSize:"0.88rem",padding:"0.8rem"}}>Faire un bingo</button>
+            <button className="btn-ghost" onClick={()=>onLabAction("reset")} style={{width:"100%",fontSize:"0.88rem",padding:"0.8rem"}}>Réinitialiser</button>
+          </div>
+        </div>
+      )}
+      {showStopConfirm && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1090,padding:"1rem"}}>
+          <div style={{maxWidth:420,width:"100%",background:"rgba(10,25,10,0.97)",border:"2px solid rgba(224,92,92,0.5)",borderRadius:18,padding:"1.4rem"}}>
+            <div style={{fontSize:"1.05rem",fontWeight:900,color:"#e05c5c",marginBottom:"0.55rem"}}>⏹ Arrêter la partie ?</div>
+            <div style={{fontSize:"0.88rem",lineHeight:1.6,color:"rgba(240,232,200,0.78)",marginBottom:"1.1rem"}}>
+              La partie se terminera aux points. Le gagnant sera déterminé par le nombre de lignes et colonnes, puis de mots cochés, puis par la dernière action.
+            </div>
+            <div style={{display:"flex",gap:"0.7rem"}}>
+              <button className="btn" style={{flex:1,background:"#e05c5c",color:"#fff"}} onClick={()=>{ setShowStopConfirm(false); onEndGame(); }}>Confirmer</button>
+              <button className="btn-ghost" style={{flex:1}} onClick={()=>setShowStopConfirm(false)}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {confirmIndex!==null && card[confirmIndex] && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1090,padding:"1rem"}}>
+          <div style={{maxWidth:420,width:"100%",background:"rgba(10,25,10,0.97)",border:"2px solid rgba(247,201,72,0.4)",borderRadius:18,padding:"1.2rem"}}>
+            <div style={{fontSize:"1.05rem",fontWeight:900,color:"#f7c948",marginBottom:"0.55rem"}}>Confirmation</div>
+            <div style={{fontSize:"0.9rem",lineHeight:1.55,color:"rgba(240,232,200,0.82)",marginBottom:"1rem"}}>
+              Valides-tu le mot <span style={{color:"#f7c948",fontWeight:800}}>"{card[confirmIndex]}"</span> ?
+            </div>
+            <div style={{display:"flex",gap:"0.7rem"}}>
+              <button className="btn" style={{flex:1}} onClick={()=>{
+                onToggle(confirmIndex);
+                setConfirmIndex(null);
+              }}>Oui</button>
+              <button className="btn-ghost" style={{flex:1}} onClick={()=>setConfirmIndex(null)}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {pendingPowerAction && pendingPowerAction.owner===player.name && pendingPowerAction.type==="target" && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1100,padding:"1rem"}}>
+          <div style={{maxWidth:420,width:"100%",background:"rgba(10,25,10,0.97)",border:"2px solid rgba(247,201,72,0.35)",borderRadius:18,padding:"1.2rem"}}>
+            <div style={{fontSize:"1.1rem",fontWeight:900,color:"#f7c948",marginBottom:"0.35rem"}}>🎯 Ciblage</div>
+            <div style={{fontSize:"0.84rem",color:"rgba(240,232,200,0.62)",lineHeight:1.55,marginBottom:"1rem"}}>
+              Choisis le joueur qui recevra seul le prochain pouvoir offensif.
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:"0.65rem"}}>
+              {pendingTargets.map(name=>(
+                <button key={name} className="btn" onClick={()=>onResolvePowerAction({type:"target",target:name})} style={{width:"100%",padding:"0.85rem 1rem"}}>
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* MODALE GAGE — victime doit réaliser son gage */}
+      {(()=>{
+        const allTraps = (!isLabMode&&sessionData&&sessionData.trapCells&&sessionData.trapCells[player.name])||{};
+        const pendingEntry = Object.entries(allTraps).find(([,t])=>t&&t.pending);
+        if (!pendingEntry) return null;
+        const [trapIdx, trapInfo] = pendingEntry;
+        const totalPlayers = players.length;
+        const votes = trapInfo.voters || {};
+        const yesVotes = Object.values(votes).filter(v=>v===true).length;
+        const allVoted = Object.keys(votes).length >= totalPlayers - 1;
+        const approved = allVoted && yesVotes === totalPlayers - 1 && totalPlayers > 1;
+        if (approved) return null; // useEffect gère la validation
+        return (
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1150,padding:"1rem"}}>
+            <div style={{maxWidth:460,width:"100%",background:"rgba(10,25,10,0.98)",border:"2px solid rgba(200,100,30,0.7)",borderRadius:18,padding:"1.4rem"}}>
+              <div style={{fontSize:"2rem",textAlign:"center",marginBottom:"0.5rem"}}>🪤</div>
+              <div style={{fontSize:"1.1rem",fontWeight:900,color:"rgba(220,120,50,0.95)",textAlign:"center",marginBottom:"0.5rem"}}>Tu as déclenché un piège !</div>
+              <div style={{fontSize:"0.82rem",color:"rgba(240,232,200,0.5)",textAlign:"center",marginBottom:"1.2rem"}}>
+                Piège posé par <span style={{color:"#f7c948",fontWeight:700}}>{trapInfo.owner||"?"}</span>
+              </div>
+              <div style={{background:"rgba(200,100,20,0.15)",border:"1px solid rgba(200,100,30,0.4)",borderRadius:12,padding:"1.1rem",marginBottom:"1.2rem",textAlign:"center"}}>
+                <div style={{fontSize:"0.72rem",color:"rgba(240,232,200,0.45)",textTransform:"uppercase",marginBottom:"0.5rem",letterSpacing:"0.1em"}}>Ton gage</div>
+                <div style={{fontSize:"1rem",fontWeight:700,color:"#f7c948",lineHeight:1.5}}>{trapInfo.gage}</div>
+              </div>
+              {!trapInfo.gageDone ? (
+                <>
+                  <div style={{fontSize:"0.82rem",color:"rgba(240,232,200,0.55)",textAlign:"center",marginBottom:"1rem"}}>
+                    Réalise le gage devant tout le monde, puis clique sur le bouton.
+                  </div>
+                  <button className="btn" style={{width:"100%",padding:"1rem",fontSize:"1rem"}} onClick={()=>{
+                    db.ref("sessions/"+sessionCode+"/trapCells/"+player.name+"/"+trapIdx+"/gageDone").set(true);
+                  }}>✅ Gage réalisé !</button>
+                </>
+              ) : (
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontSize:"1.5rem",marginBottom:"0.5rem"}}>⏳</div>
+                  <div style={{fontSize:"0.9rem",color:"rgba(240,232,200,0.6)"}}>En attente du vote des autres joueurs...</div>
+                  <div style={{fontSize:"0.78rem",color:"rgba(240,232,200,0.35)",marginTop:"0.5rem"}}>{yesVotes}/{Math.max(0,totalPlayers-1)} validations</div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* MODALE VOTE GAGE — les autres joueurs votent */}
+      {(()=>{
+        if (isLabMode) return null;
+        const allPlayerTraps = (sessionData&&sessionData.trapCells)||{};
+        for (const [victimName, traps] of Object.entries(allPlayerTraps)) {
+          if (victimName === player.name) continue;
+          for (const [trapIdx, trapInfo] of Object.entries(traps||{})) {
+            if (!trapInfo||!trapInfo.pending||!trapInfo.gageDone) continue;
+            const myVote = (trapInfo.voters||{})[player.name];
+            if (myVote !== undefined) continue;
+            const yesVotes = Object.values(trapInfo.voters||{}).filter(v=>v===true).length;
+            const totalVoters = players.length - 1;
+            return (
+              <div key={victimName+trapIdx} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1150,padding:"1rem"}}>
+                <div style={{maxWidth:420,width:"100%",background:"rgba(10,25,10,0.98)",border:"2px solid rgba(247,201,72,0.5)",borderRadius:18,padding:"1.4rem",textAlign:"center"}}>
+                  <div style={{fontSize:"2rem",marginBottom:"0.5rem"}}>🗳️</div>
+                  <div style={{fontSize:"1rem",fontWeight:900,color:"#f7c948",marginBottom:"0.35rem"}}>Vote de gage</div>
+                  <div style={{fontSize:"0.88rem",color:"rgba(240,232,200,0.7)",marginBottom:"0.8rem"}}>
+                    <span style={{color:"#f7c948",fontWeight:700}}>{victimName}</span> a-t-il réalisé son gage ?
+                  </div>
+                  <div style={{background:"rgba(200,100,20,0.15)",border:"1px solid rgba(200,100,30,0.4)",borderRadius:10,padding:"0.9rem",marginBottom:"1rem"}}>
+                    <div style={{fontSize:"0.9rem",fontWeight:700,color:"rgba(220,150,60,0.9)"}}>{trapInfo.gage}</div>
+                  </div>
+                  <div style={{fontSize:"0.75rem",color:"rgba(240,232,200,0.4)",marginBottom:"1rem"}}>{yesVotes}/{totalVoters} validation{yesVotes!==1?"s":""}</div>
+                  <div style={{display:"flex",gap:"0.8rem"}}>
+                    <button className="btn" style={{flex:1,padding:"0.9rem",fontSize:"0.95rem"}} onClick={()=>{
+                      db.ref("sessions/"+sessionCode+"/trapCells/"+victimName+"/"+trapIdx+"/voters/"+player.name).set(true);
+                    }}>✅ Oui, validé !</button>
+                    <button className="btn-ghost" style={{flex:1,padding:"0.9rem",fontSize:"0.95rem"}} onClick={()=>{
+                      db.ref("sessions/"+sessionCode+"/trapCells/"+victimName+"/"+trapIdx+"/voters/"+player.name).set(false);
+                    }}>❌ Non</button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+        }
+        return null;
+      })()}
+      {pendingPowerAction && pendingPowerAction.owner===player.name && pendingPowerAction.type==="sabotage" && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1100,padding:"1rem"}}>
+          <div style={{maxWidth:520,width:"100%",background:"rgba(10,25,10,0.97)",border:"2px solid rgba(247,201,72,0.35)",borderRadius:18,padding:"1.2rem"}}>
+            <div style={{fontSize:"1.1rem",fontWeight:900,color:"#f7c948",marginBottom:"0.35rem"}}>🧨 Sabotage</div>
+            <div style={{fontSize:"0.84rem",color:"rgba(240,232,200,0.62)",lineHeight:1.55,marginBottom:"1rem"}}>
+              Choisis un joueur puis une case déjà cochée à lui retirer.
+            </div>
+            {!selectedSabTarget ? (
+              <div style={{display:"flex",flexDirection:"column",gap:"0.65rem"}}>
+                {sabotageTargets.map(name=>(
+                  <button key={name} className="btn" onClick={()=>setSelectedSabTarget(name)} style={{width:"100%",padding:"0.85rem 1rem"}}>
+                    {name}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <>
+                <button className="back-btn" onClick={()=>setSelectedSabTarget("")} style={{marginBottom:"0.8rem"}}>← Changer de joueur</button>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:"0.65rem"}}>
+                  {sabotageChoices.map(choice=>(
+                    <button key={choice.index} className="btn-ghost" onClick={()=>onResolvePowerAction({type:"sabotage",target:selectedSabTarget,index:choice.index})} style={{width:"100%",padding:"0.85rem 0.9rem"}}>
+                      {choice.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ================================================================
+//  ECRAN GAGNANT
+// ================================================================
+function WinnerScreen({sessionData, player, onRematch, onLeave, showConfetti, isHost}) {
+  const winner = sessionData&&sessionData.winner;
+  const isWinner = winner===player.name;
+  const isTimed = !!(sessionData&&sessionData.endsAt); // partie à durée limitée
+  const [winnerData, setWinnerData] = useState(null);
+  useEffect(()=>{
+    if (winner&&db) db.ref("users/"+winner).once("value").then(s=>setWinnerData(s.val()));
+  },[winner]);
+  return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:"1rem",textAlign:"center"}}>
+      {showConfetti&&<Confetti/>}
+      <div style={{maxWidth:420,width:"100%"}}>
+        {winner&&winnerData&&(
+          <div style={{marginBottom:"1.5rem",animation:"winnerPop 0.55s cubic-bezier(0.34,1.56,0.64,1)"}}>
+            <FlameAvatar photo={winnerData.photo} name={winner} streak={winnerData.streak||0} bestStreak={winnerData.bestStreak||0} size={110}/>
+          </div>
+        )}
+        <div style={{fontSize:isWinner?"4.5rem":"3.5rem",marginBottom:"0.5rem",animation:"popIn 0.4s ease"}}>{isWinner?"🏆":"🎖️"}</div>
+        <h1 style={{fontSize:"clamp(1.5rem,6vw,2.5rem)",fontWeight:900,color:isWinner?"#f7c948":"rgba(240,232,200,0.8)",marginBottom:"0.5rem",animation:"popIn 0.35s ease 0.08s both"}}>
+          {isWinner
+            ? (isTimed ? "Victoire aux points !" : "BINGO ! Tu as gagné !")
+            : winner ? (winner+" a gagné !") : "Partie terminée !"}
+        </h1>
+        <p style={{color:"rgba(240,232,200,0.5)",marginBottom:"2rem",fontSize:"0.9rem",lineHeight:1.5}}>
+          {isWinner
+            ? (isTimed ? "Tu avais le plus de lignes et de mots !" : "Tu as complété tout ton carton en premier !")
+            : (isTimed ? "Pas assez de lignes cette fois..." : "Complète tout le carton avant les autres la prochaine fois !")}
+        </p>
+        <div style={{display:"flex",flexDirection:"column",gap:"0.8rem"}}>
+          {isHost
+            ? <button className="btn" style={{width:"100%",fontSize:"1.05rem",padding:"1rem"}} onClick={onRematch}>
+                🔁 Nouvelle partie (mêmes joueurs)
+              </button>
+            : <div style={{color:"rgba(240,232,200,0.4)",fontSize:"0.88rem",fontStyle:"italic",padding:"0.5rem"}}>
+                En attente que l'hôte lance la prochaine partie...
+              </div>
+          }
+          <button className="btn-ghost" style={{width:"100%",fontSize:"0.95rem",padding:"0.85rem"}} onClick={onLeave}>
+            Quitter la session
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+//  APP
+// ================================================================
+function App() {
+  if (!IS_CONFIGURED) return <SetupScreen/>;
+
+  const [screen, setScreen] = useState("loading");
+  const [player, setPlayer] = useState(null);
+  const [sessionCode, setSessionCode] = useState("");
+  const [sessionData, setSessionData] = useState(null);
+  const [card, setCard] = useState([]);
+  const [marked, setMarked] = useState(getInitialMarkedSet(5));
+  const [wordLists, setWordLists] = useState({bts:INITIAL_BTS_REFS});
+  const [wordLevels, setWordLevels] = useState({});
+  const [wordSuggestions, setWordSuggestions] = useState({});
+  const [allUsers, setAllUsers] = useState([]);
+  const [lastSessionSummary, setLastSessionSummary] = useState(null);
+  const [invite, setInvite] = useState(null);
+  const [inviteDismissed, setInviteDismissed] = useState(0); // timestamp du dernier dismiss
+  const [notifQueue, setNotifQueue] = useState([]);
+  const [currentNotif, setCurrentNotif] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [isLabMode, setIsLabMode] = useState(false);
+  const [freezeState, setFreezeState] = useState(null);
+  const [powerAnim, setPowerAnim] = useState(null); // {type, id}
+  const clRef = useRef(new Set());
+  const seenRef = useRef(new Set());
+  const statsRef = useRef(false);
+  const gameRef = useRef(false);
+  const labTimersRef = useRef([]);
+  const notifTimersRef = useRef([]);
+  const freezeTimerRef = useRef(null);
+  const durationTimerRef = useRef(null);
+  const handleToggleRef = useRef(null);
+  const clearLabTimers = useCallback(()=>{
+    labTimersRef.current.forEach(clearTimeout);
+    labTimersRef.current = [];
+  },[]);
+  const clearNotifTimers = useCallback(()=>{
+    notifTimersRef.current.forEach(clearTimeout);
+    notifTimersRef.current = [];
+  },[]);
+  const scheduleNotif = useCallback((notif, delayMs=0)=>{
+    if (delayMs<=0) {
+      setNotifQueue(q=>[...q, notif]);
+      return;
+    }
+    const timer = setTimeout(()=>{
+      setNotifQueue(q=>[...q, notif]);
+      notifTimersRef.current = notifTimersRef.current.filter(t=>t!==timer);
+    }, delayMs);
+    notifTimersRef.current.push(timer);
+  },[]);
+  const clearFreezeEffect = useCallback(()=>{
+    if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current);
+    freezeTimerRef.current = null;
+    setFreezeState(null);
+  },[]);
+
+  const clearDurationTimer = useCallback(()=>{
+    if (durationTimerRef.current) clearTimeout(durationTimerRef.current);
+    durationTimerRef.current = null;
+  },[]);
+
+  // Fin de partie sans bingo (timer écoulé ou arrêt manuel par le host)
+  const handleEndGame = useCallback((sd, code)=>{
+    if (!gameRef.current) return;
+    gameRef.current = false;
+    clearDurationTimer();
+    const winner = resolveTimedWinner(sd);
+    if (!winner) return; // sécurité si partie vide
+    db.ref("sessions/"+code).update({winner, status:"finished"});
+    db.ref("sessions/"+code+"/events").push({
+      player: winner,
+      message: winner+" a remport\u00e9 la partie aux points ! 🏆",
+      type:"bingo", timestamp:Date.now()
+    });
+    const ranked = isStandardRankedMode(sd);
+    const allPlayers = Object.keys((sd&&sd.players)||{});
+    // Mettre à jour les stats de TOUS les joueurs
+    allPlayers.forEach(name=>{
+      db.ref("users/"+name).once("value").then(snap=>{
+        const wp = normalizePlayer(snap.val()||{name});
+        if (name===winner) {
+          const newStreak = ranked ? (wp.streak||0)+1 : (wp.streak||0);
+          const difficultyWinKey = getDifficultyWinKey((sd&&sd.difficulty)||"normal");
+          db.ref("users/"+name).update({
+            wins:(wp.wins||0)+1,
+            [difficultyWinKey]:(wp[difficultyWinKey]||0)+1,
+            gamesPlayed:(wp.gamesPlayed||0)+1,
+            streak: ranked ? newStreak : (wp.streak||0),
+            bestStreak: ranked ? Math.max(newStreak, wp.bestStreak||0) : (wp.bestStreak||0)
+          });
+        } else {
+          // Perdants : incrémenter gamesPlayed et réinitialiser la série
+          db.ref("users/"+name).update({
+            gamesPlayed:(wp.gamesPlayed||0)+1,
+            streak: ranked ? 0 : (wp.streak||0)
+          });
+        }
+      });
+    });
+    const summary = buildSessionSummary(code, sd, winner, {});
+    db.ref("meta/lastSession").set(summary);
+  },[clearDurationTimer]);
+  const applyFreezeEffect = useCallback(ev=>{
+    if (!player || !ev || !ev.targets) return;
+    const frozenIndex = ev.targets[player.name];
+    if (frozenIndex===undefined || frozenIndex===null) return;
+    // Freeze permanent jusqu'au prochain pouvoir (pas de timer)
+    clearFreezeEffect();
+    setFreezeState({index:frozenIndex, source:ev.player});
+  },[player, clearFreezeEffect]);
+  const updatePowerState = useCallback(updater=>{
+    if (!sessionCode || !db) return Promise.resolve();
+    return db.ref("sessions/"+sessionCode+"/powerState").transaction(current=>{
+      const base = current || {shields:{},targetLock:null,pendingAction:null};
+      return updater(base) || base;
+    });
+  },[sessionCode]);
+  // File d'attente des notifications
+  useEffect(()=>{
+    if (!currentNotif && notifQueue.length>0) {
+      setCurrentNotif(notifQueue[0]);
+      setNotifQueue(q=>q.slice(1));
+    }
+  },[notifQueue,currentNotif]);
+
+  useEffect(()=>{
+    if (!db) return;
+    const listRef = db.ref("wordLists");
+    const levelsRef = db.ref("wordLevels");
+    const suggestionRef = db.ref("wordSuggestions");
+    const usersRef = db.ref("users");
+    const lastSessionRef = db.ref("meta/lastSession");
+    listRef.once("value").then(snap=>{
+      if (!snap.exists()) {
+        listRef.set({bts:INITIAL_BTS_REFS});
+      }
+    });
+    const listHandler = snap=>{
+      const raw = snap.val() || {};
+      setWordLists({
+        bts: raw.bts&&raw.bts.length ? raw.bts : INITIAL_BTS_REFS
+      });
+    };
+    const levelsHandler = snap=>{ setWordLevels(snap.val()||{}); };
+    const suggestionHandler = snap=>{ setWordSuggestions(snap.val() || {}); };
+    const usersHandler = snap=>{
+      const raw = snap.val() || {};
+      setAllUsers(Object.values(raw).map(normalizePlayer));
+    };
+    const lastSessionHandler = snap=>{ setLastSessionSummary(snap.val() || null); };
+    const inviteRef = db.ref("meta/invite");
+    const inviteHandler = snap=>{
+      const val = snap.val();
+      if (!val) { setInvite(null); return; }
+      // Ignorer les invites de plus de 30 secondes
+      if (Date.now() - (val.sentAt||0) > 30000) { setInvite(null); return; }
+      setInvite(val);
+    };
+    listRef.on("value", listHandler);
+    levelsRef.on("value", levelsHandler);
+    suggestionRef.on("value", suggestionHandler);
+    usersRef.on("value", usersHandler);
+    lastSessionRef.on("value", lastSessionHandler);
+    inviteRef.on("value", inviteHandler);
+    return ()=>{
+      listRef.off("value", listHandler);
+      levelsRef.off("value", levelsHandler);
+      suggestionRef.off("value", suggestionHandler);
+      usersRef.off("value", usersHandler);
+      lastSessionRef.off("value", lastSessionHandler);
+      inviteRef.off("value", inviteHandler);
+    };
+  },[]);
+
+  // Chargement initial
+  useEffect(()=>{
+    const sp = localStorage.getItem("bp-player");
+    if (!sp) { setScreen("login"); return; }
+    const lp = JSON.parse(sp);
+    db.ref("users/"+lp.name).once("value").then(snap=>{
+      const fp = normalizePlayer(snap.exists() ? snap.val() : lp);
+      setPlayer(fp); localStorage.setItem("bp-player",JSON.stringify(fp));
+      const sc = localStorage.getItem("bp-session");
+      if (!sc) { setScreen("lobby"); return; }
+      db.ref("sessions/"+sc).once("value").then(ss=>{
+        if (!ss.exists()||!(ss.val().players&&ss.val().players[fp.name])) {
+          localStorage.removeItem("bp-session"); setScreen("lobby"); return;
+        }
+        const s = ss.val(); setSessionData(s); setSessionCode(sc);
+        if (s.status==="playing"&&s.cards&&s.cards[fp.name]) {
+          setCard(s.cards[fp.name]);
+          const mo = (s.marked&&s.marked[fp.name])||{};
+          const ms = getInitialMarkedSet(getBoardSize(s));
+          Object.keys(mo).map(Number).forEach(i=>ms.add(i));
+          setMarked(ms); getLines(ms, getBoardSize(s)).forEach(l=>clRef.current.add(l.cells.join("-")));
+          gameRef.current=true; statsRef.current=false; setScreen("game");
+          // Relancer le timer si host avec durée restante
+          if (s.endsAt && s.host===fp.name) {
+            const remaining = s.endsAt - Date.now();
+            if (remaining > 0) {
+              durationTimerRef.current = setTimeout(()=>{
+                db.ref("sessions/"+sc).once("value").then(snap2=>{
+                  if (snap2.exists() && snap2.val().status==="playing") handleEndGame(snap2.val(), sc);
+                });
+              }, remaining);
+            } else {
+              // Temps déjà écoulé — terminer immédiatement
+              db.ref("sessions/"+sc).once("value").then(snap2=>{
+                if (snap2.exists() && snap2.val().status==="playing") handleEndGame(snap2.val(), sc);
+              });
+            }
+          }
+        } else if (s.status==="playing") {
+          // Rejoint en retard
+          setScreen("latejoin");
+        } else if (s.status==="waiting") {
+          setScreen("waiting");
+        } else {
+          localStorage.removeItem("bp-session"); setScreen("lobby");
+        }
+      });
+    });
+  },[]);
+
+  const savePlayer = useCallback(p=>{
+    const normalized = normalizePlayer(p);
+    setPlayer(normalized); localStorage.setItem("bp-player",JSON.stringify(normalized));
+    db.ref("users/"+normalized.name).set(normalized);
+  },[]);
+
+  const startLabGame = useCallback(config=>{
+    // Accepte soit un objet {difficulty, powerMode} soit une string difficulty (compatibilite rematch)
+    const difficulty = (typeof config === "string") ? config : (config.difficulty || "normal");
+    const powerMode = (typeof config === "string") ? false : !!(config.powerMode);
+    const cfg = getDifficultyConfig(difficulty);
+    clearLabTimers();
+    clearNotifTimers();
+    clearFreezeEffect();
+    const labSession = {
+      host:player.name,
+      status:"playing",
+      difficulty,
+      players:{[player.name]:true},
+      cards:{},
+      marked:{},
+      stats:{},
+      winner:null,
+      powerMode,
+      powerState:{shields:{},targetLock:null,pendingAction:null}
+    };
+    const nextCard = genCardWithLevels(getWordPool(wordLists), cfg.size, wordLevels);
+    labSession.cards[player.name] = nextCard;
+    setIsLabMode(true);
+    setSessionCode("LAB");
+    setSessionData(labSession);
+    setCard(nextCard);
+    setMarked(getInitialMarkedSet(cfg.size));
+    setNotifQueue([]);
+    setCurrentNotif(null);
+    clRef.current=new Set();
+    seenRef.current=new Set();
+    statsRef.current=false;
+    gameRef.current=true;
+    setScreen("game");
+  },[player, clearLabTimers, clearNotifTimers, clearFreezeEffect, wordLists, wordLevels]);
+
+
+  // Listener session
+  useEffect(()=>{
+    if (!sessionCode||["loading","login","profile","lobby","words"].includes(screen)) return;
+    const ref = db.ref("sessions/"+sessionCode);
+    const h = snap=>{
+      if (!snap.exists()) return;
+      const s = snap.val(); setSessionData(s);
+      if (!isLabMode && s.status==="playing" && screen==="game" && player && s.cards && s.cards[player.name]) {
+        const remoteCard = s.cards[player.name];
+        const remoteMarkedObj = (s.marked&&s.marked[player.name])||{};
+        const remoteMarked = getInitialMarkedSet(getBoardSize(s));
+        Object.keys(remoteMarkedObj).map(Number).forEach(i=>remoteMarked.add(i));
+        if (!arraysEqual(remoteCard, card)) setCard(remoteCard);
+        const localSorted = Array.from(marked).sort((a,b)=>a-b);
+        const remoteSorted = Array.from(remoteMarked).sort((a,b)=>a-b);
+        if (!arraysEqual(localSorted, remoteSorted)) {
+          setMarked(remoteMarked);
+          clRef.current = getCompletedLineKeySet(remoteMarked, getBoardSize(s));
+        }
+      }
+
+      // En attente -> partie lancee
+      if (s.status==="playing"&&screen==="waiting"&&s.cards&&player&&s.cards[player.name]) {
+        setCard(s.cards[player.name]); setMarked(getInitialMarkedSet(getBoardSize(s)));
+        clRef.current=new Set();
+        seenRef.current=new Set();
+        clearFreezeEffect();
+        statsRef.current=false; gameRef.current=true; setScreen("game");
+        // Lancer le timer de durée si défini et si on est le host
+        if (s.endsAt && s.host===player.name) {
+          clearDurationTimer();
+          const remaining = s.endsAt - Date.now();
+          if (remaining > 0) {
+            durationTimerRef.current = setTimeout(()=>{
+              db.ref("sessions/"+sessionCode).once("value").then(snap2=>{
+                if (snap2.exists() && snap2.val().status==="playing") handleEndGame(snap2.val(), sessionCode);
+              });
+            }, remaining);
+          }
+        }
+      }
+
+      // Retardataire -> partie relancee, maintenant je suis dedans
+      if (s.status==="playing"&&screen==="latejoin"&&s.cards&&player&&s.cards[player.name]) {
+        setCard(s.cards[player.name]); setMarked(getInitialMarkedSet(getBoardSize(s)));
+        clRef.current=new Set();
+        seenRef.current=new Set();
+        clearFreezeEffect();
+        statsRef.current=false; gameRef.current=true; setScreen("game");
+      }
+
+      // Partie terminee -> ecran gagnant
+      if (s.status==="finished" && (screen==="game" || screen==="latejoin")) {
+        gameRef.current=false;
+        clearFreezeEffect();
+        if (s.winner===(player&&player.name)) { setShowConfetti(true); setTimeout(()=>setShowConfetti(false),5500); }
+        setScreen("winner");
+      }
+
+      // Rematch : session remise en attente depuis winner
+      if (s.status==="waiting"&&screen==="winner") {
+        setMarked(getInitialMarkedSet(getBoardSize(s))); setCard([]);
+        clRef.current=new Set(); seenRef.current=new Set();
+        clearFreezeEffect();
+        statsRef.current=false; gameRef.current=false;
+        setScreen("waiting");
+      }
+    };
+    ref.on("value",h); return ()=>ref.off("value",h);
+  },[sessionCode,screen,player&&player.name,clearFreezeEffect,isLabMode,card,marked]);
+
+  // Listener evenements en jeu
+  useEffect(()=>{
+    if (screen!=="game"||!sessionCode||!player) return;
+    const t0 = Date.now();
+    const ref = db.ref("sessions/"+sessionCode+"/events");
+    const h = ref.on("child_added",snap=>{
+      const ev = snap.val(); if (!ev) return;
+      if (seenRef.current.has(snap.key)) return;
+      seenRef.current.add(snap.key);
+      if (ev.timestamp<t0-4000) return;
+      if (ev.type==="freeze") {
+        if (ev.player!==player.name) {
+          applyFreezeEffect(ev);
+          // Animation freeze pour les victimes
+          setPowerAnim({type:"freeze", id:snap.key});
+          db.ref("users/"+ev.player).once("value").then(us=>{
+            const ud = us.val()||{};
+            scheduleNotif({
+              id:snap.key,
+              player:ev.player,
+              message:ev.message,
+              phrase:ev.phrase||null,
+              photo:ud.photo||null,
+              streak:ud.streak||0
+            });
+          });
+        }
+        return;
+      }
+      // Tout pouvoir (hors freeze) lève le freeze en cours
+      if (["shuffle","shield","target","bomb","sabotage"].includes(ev.type)) {
+        clearFreezeEffect();
+        // Animation pour tous sauf l'émetteur
+        if (ev.player!==player.name) {
+          setPowerAnim({type:ev.type, id:snap.key});
+        }
+      }
+      if (ev.player===player.name) return;
+      db.ref("users/"+ev.player).once("value").then(us=>{
+        const ud = us.val()||{};
+        scheduleNotif({id:snap.key,player:ev.player,message:ev.message,phrase:ev.phrase||null,photo:ud.photo||null,streak:ud.streak||0});
+      });
+    });
+    return ()=>ref.off("child_added",h);
+  },[screen,sessionCode,player&&player.name,applyFreezeEffect,scheduleNotif,clearFreezeEffect]);
+
+  // Login
+  const handleLogin = name=>{
+    db.ref("users/"+name).once("value").then(snap=>{
+      const p = normalizePlayer(snap.exists() ? snap.val() : {name});
+      savePlayer(p); setScreen("profile");
+    });
+  };
+
+  // Creer session
+  const handleCreate = ()=>{
+    const code = genCode();
+    setIsLabMode(false);
+    clearNotifTimers();
+    clearFreezeEffect();
+    db.ref("sessions/"+code).set({
+      host:player.name, status:"waiting", createdAt:Date.now(),
+      players:{[player.name]:true}, cards:{}, marked:{}, winner:null,
+      stats:{},
+      difficulty:"normal", powerMode:false,
+      powerState:{shields:{},targetLock:null,pendingAction:null}, ghostCells:{}, trapCells:{}
+    }).then(()=>{ setSessionCode(code); localStorage.setItem("bp-session",code); setScreen("waiting"); });
+  };
+
+  // Rejoindre session (meme si partie en cours)
+  const handleJoin = code=>new Promise((res,rej)=>{
+    setIsLabMode(false);
+    clearNotifTimers();
+    clearFreezeEffect();
+    db.ref("sessions/"+code).once("value").then(snap=>{
+      if (!snap.exists()) { alert("Session introuvable !"); res(); return; }
+      const s = snap.val();
+      const updates = {};
+      updates["players/"+player.name] = true;
+      // Chef auto : si le host actuel n'est plus dans les joueurs et que la session attend, on prend le chef
+      const currentPlayers = Object.keys(s.players||{});
+      const hostStillHere = s.host && currentPlayers.includes(s.host);
+      if (!hostStillHere && s.status==="waiting") {
+        updates.host = player.name;
+      }
+      db.ref("sessions/"+code).update(updates).then(()=>{
+        // Relire la session après update pour avoir le bon host
+        db.ref("sessions/"+code).once("value").then(snap2=>{
+          const s2 = snap2.val()||s;
+          setSessionCode(code); setSessionData(s2);
+          localStorage.setItem("bp-session",code);
+          if (s2.status==="playing") {
+            setScreen("latejoin");
+          } else {
+            setScreen("waiting");
+          }
+          res();
+        });
+      }).catch(rej);
+    }).catch(rej);
+  });
+
+  const handleConfigChange = config=>{
+    if (!sessionCode || !sessionData || sessionData.host!==player.name) return;
+    const nextDifficulty = config.difficulty || sessionData.difficulty || "normal";
+    const updates = {difficulty:nextDifficulty};
+    if (Object.prototype.hasOwnProperty.call(config,"powerMode")) {
+      updates.powerMode = !!config.powerMode;
+    }
+    if (Object.prototype.hasOwnProperty.call(config,"duration")) {
+      updates.duration = config.duration; // null = sans limite
+    }
+    db.ref("sessions/"+sessionCode).update(updates);
+  };
+
+  const handleSuggestWord = useCallback((word)=>{
+    if (!player || !db) return;
+    const cleanWord = (word||"").trim().replace(/\s+/g," ");
+    if (!cleanWord) return;
+    const officialList = getWordPool(wordLists);
+    if (officialList.some(item=>item.toLowerCase()===cleanWord.toLowerCase())) return;
+    const existing = Object.entries(wordSuggestions).find(([, suggestion])=>
+      suggestion &&
+      (suggestion.word||"").toLowerCase()===cleanWord.toLowerCase()
+    );
+    if (existing) return;
+    db.ref("wordSuggestions").push({
+      word: cleanWord,
+      createdAt: Date.now(),
+      createdBy: player.name,
+      votes: {[player.name]:1}
+    });
+  },[player,wordLists,wordSuggestions]);
+
+  const handleVoteSuggestion = useCallback((suggestionId, vote)=>{
+    if (!player || !db) return;
+    const suggestion = wordSuggestions[suggestionId];
+    if (!suggestion) return;
+    const votes = {...(suggestion.votes||{})};
+    votes[player.name] = vote;
+    const score = Object.values(votes).reduce((sum,val)=>sum+(val||0),0);
+    if (score >= 3) {
+      const list = getWordPool(wordLists);
+      if (!list.some(item=>item.toLowerCase()===(suggestion.word||"").toLowerCase())) {
+        db.ref("wordLists/bts").set([...list, suggestion.word]);
+      }
+      db.ref("wordSuggestions/"+suggestionId).remove();
+      return;
+    }
+    if (score <= -3) {
+      db.ref("wordSuggestions/"+suggestionId).remove();
+      return;
+    }
+    db.ref("wordSuggestions/"+suggestionId+"/votes").set(votes);
+  },[player,wordSuggestions,wordLists]);
+
+  const handleResolvePowerAction = useCallback(payload=>{
+    if (!sessionData || !player) return;
+    const pending = ((sessionData.powerState||{}).pendingAction)||null;
+    if (!pending || pending.owner!==player.name) return;
+    if (pending.type==="target") {
+      if (!payload || !payload.target || payload.target===player.name || !((pending.targets||[]).includes(payload.target))) return;
+      updatePowerState(state=>({
+        ...state,
+        pendingAction:null,
+        targetLock:{owner:player.name,target:payload.target,createdAt:Date.now()}
+      }));
+      return;
+    }
+    if (pending.type==="sabotage") {
+      const target = payload&&payload.target;
+      const index = payload&&payload.index;
+      if (!target || target===player.name || index===undefined || index===null || !((pending.targets||[]).includes(target))) return;
+      const currentMarked = (((sessionData.marked||{})[target])||{});
+      if (!currentMarked[index]) return;
+      const nextMarked = {...currentMarked};
+      delete nextMarked[index];
+      db.ref("sessions/"+sessionCode+"/marked/"+target).set(nextMarked).then(()=>{
+        updatePowerState(state=>({
+          ...state,
+          pendingAction:null
+        }));
+      });
+    }
+  },[sessionData,player,sessionCode,updatePowerState]);
+
+  // Lancer la partie
+  const handleStart = ()=>{
+    setIsLabMode(false);
+    clearNotifTimers();
+    clearFreezeEffect();
+    clearDurationTimer();
+    db.ref("sessions/"+sessionCode).once("value").then(snap=>{
+      const latest = snap.val() || {};
+      const ps = Object.keys(latest.players||{});
+      const size = getBoardSize(latest);
+      const refs = getWordPool(wordLists);
+      const cards = {};
+      ps.forEach(p=>{ cards[p]=genCardWithLevels(refs, size, wordLevels); });
+      const duration = latest.duration || null;
+      const startedAt = Date.now();
+      const endsAt = duration ? startedAt+duration : null;
+      db.ref("sessions/"+sessionCode).update({
+        status:"playing",
+        cards,
+        marked:{},
+        stats:{},
+        winner:null,
+        events:null,
+        startedAt,
+        endsAt,
+        difficulty:latest.difficulty||"normal",
+        powerMode:!!latest.powerMode,
+        powerState:{shields:{},targetLock:null,pendingAction:null},
+        ghostCells:{},
+        trapCells:{}
+      });
+    });
+  };
+
+  // Toggle case (selection ET deselection)
+  const handleToggle = useCallback(i=>{
+    const size = getBoardSize(sessionData);
+    const totalCells = getCompletionTarget(size);
+    const isFrozenCell = !!(freezeState && freezeState.index===i);
+    if (!card[i]||card[i]==="FREE"||isFrozenCell||(sessionData&&sessionData.winner)||!gameRef.current) return;
+
+    // Vérifier si c'est une ghost cell (leurre)
+    if (!isLabMode) {
+      const ghostCells = (sessionData&&sessionData.ghostCells&&sessionData.ghostCells[player.name]) || {};
+      const ghostInfo = ghostCells[String(i)];
+      if (ghostInfo) {
+        // Notifier le joueur qu'il a trouvé la case ghost
+        scheduleNotif({
+          id: Date.now()+i,
+          player: player.name,
+          message: "Case Ghost découverte ! 👻",
+          phrase: "Le vrai mot « "+ghostInfo.realWord+" » est validé automatiquement !",
+          photo: player.photo||null,
+          streak: player.streak||0
+        });
+        // Supprimer le ghost et restaurer le vrai mot dans la carte
+        const nextCard = [...card];
+        nextCard[i] = ghostInfo.realWord;
+        setCard(nextCard);
+        db.ref("sessions/"+sessionCode+"/cards/"+player.name).set(nextCard);
+        db.ref("sessions/"+sessionCode+"/ghostCells/"+player.name+"/"+i).remove();
+        // Cocher la vraie case automatiquement — ne pas return, laisser continuer le toggle
+      }
+      // Vérifier si c'est une trap cell
+      const trapCells = (sessionData&&sessionData.trapCells&&sessionData.trapCells[player.name]) || {};
+      const trapInfo = trapCells[String(i)];
+      if (trapInfo && !trapInfo.pending) {
+        db.ref("sessions/"+sessionCode+"/trapCells/"+player.name+"/"+i+"/pending").set(true);
+        return;
+      }
+    }
+    const nm = new Set(marked);
+    if (nm.has(i)) return;
+    nm.add(i);
+    setMarked(nm);
+    const mo = {}; nm.forEach(x=>{ mo[x]=true; });
+    if (isLabMode) setSessionData(sd=>sd ? ({...sd,marked:{...(sd.marked||{}),[player.name]:mo}}) : sd);
+    else {
+      db.ref("sessions/"+sessionCode+"/marked/"+player.name).set(mo);
+      db.ref("sessions/"+sessionCode+"/stats/"+player.name+"/lastMarkedAt").set(Date.now());
+    }
+
+    // clRef reflète TOUJOURS l'état juste avant ce toggle.
+    // On le resynchronise depuis `marked` en début de toggle pour capturer
+    // les suppressions de cases faites par bomb/sabotage (qui mettent à jour
+    // marked via Firebase mais peuvent désynchroniser clRef si le re-render
+    // React n'a pas encore propagé la nouvelle valeur dans la closure).
+    clRef.current = getCompletedLineKeySet(nm, size);
+    // nm = marked + i, donc "avant le toggle" = nm sans i
+    const nmBefore = new Set(nm); nmBefore.delete(i);
+    const previousLineKeys = getCompletedLineKeySet(nmBefore, size);
+    const nowCompleted = getLines(nm, size);
+    const freshLines = nowCompleted.filter(line=>!previousLineKeys.has(line.cells.join("-")));
+    const scoringLines = freshLines.filter(line=>line.type!=="diagonale");
+
+    if (scoringLines.length > 0 && !isLabMode) {
+      db.ref("sessions/"+sessionCode+"/stats/"+player.name+"/lineCount").transaction(current=>(current||0)+scoringLines.length);
+    }
+
+    if (freshLines.length > 0 && nm.size < totalCells) {
+      freshLines.forEach(line=>{
+        if (line.type==="diagonale") return;
+        let msg, phrase;
+        if (line.type==="ligne") {
+          msg = player.name+" a complété une LIGNE ! 🎯";
+          phrase = randFrom(LINE_PHRASES);
+        } else if (line.type==="colonne") {
+          msg = player.name+" a complété une COLONNE ! 📏";
+          phrase = randFrom(COL_PHRASES);
+        } else {
+          return;
+        }
+        if (!isLabMode) {
+          db.ref("sessions/"+sessionCode+"/events").push({
+            player:player.name, message:msg, phrase:phrase, type:line.type, timestamp:Date.now()
+          });
+        }
+        // Notification locale (vrai jeu ET labo)
+        scheduleNotif({id:Date.now()+line.cells[0],player:player.name,message:msg,phrase:phrase,photo:player.photo||null,streak:player.streak||0});
+
+        const shouldTriggerPower = !!(sessionData&&sessionData.powerMode);
+        if (shouldTriggerPower) {
+          const localPowerId = Date.now()+line.cells[0];
+
+          if (isLabMode) {
+            // === POUVOIR EN MODE LABO (local, sans Firebase) ===
+            const timer = setTimeout(()=>{
+              const powerType = randFrom(POWER_TYPES);
+              let powerMessage = "";
+              let powerPhrase = "";
+
+              if (powerType==="freeze") {
+                powerMessage = player.name+" active le pouvoir Freeze ! ❄️";
+                powerPhrase = "Une case non cochée est gelée (simulation labo).";
+              } else if (powerType==="shuffle") {
+                powerMessage = player.name+" active le pouvoir Shuffle ! 🔀";
+                powerPhrase = "Les grilles seraient mélangées en vrai jeu.";
+              } else if (powerType==="shield") {
+                powerMessage = player.name+" active un Bouclier ! 🛡️";
+                powerPhrase = "Le prochain pouvoir adverse serait bloqué.";
+              } else if (powerType==="target") {
+                powerMessage = player.name+" active Ciblage ! 🎯";
+                powerPhrase = "Il ciblerait un adversaire en vrai jeu.";
+              } else if (powerType==="bomb") {
+                powerMessage = player.name+" active Bombe ! 💣";
+                powerPhrase = "Les adversaires perdraient une case en vrai jeu.";
+              } else if (powerType==="ghost") {
+                powerMessage = player.name+" active Ghost ! 👻";
+                powerPhrase = "Une case deviendrait un leurre chez les adversaires en vrai jeu.";
+              } else if (powerType==="trap") {
+                powerMessage = player.name+" active Trap ! 🪤";
+                powerPhrase = "Une case serait piégée avec un gage en vrai jeu : "+randFrom(TRAP_GAGES);
+              } else {
+                powerMessage = player.name+" active Sabotage ! 🧨";
+                powerPhrase = "Il retirerait une case chez un adversaire en vrai jeu.";
+              }
+
+              clearFreezeEffect();
+              setPowerAnim({type:powerType, id:"lab-"+localPowerId});
+              scheduleNotif({
+                id:"lab-power-"+localPowerId,
+                player:player.name,
+                message:powerMessage,
+                phrase:powerPhrase,
+                photo:player.photo||null,
+                streak:player.streak||0
+              });
+            }, POWER_NOTIFICATION_DELAY);
+            notifTimersRef.current.push(timer);
+
+          } else {
+            // === POUVOIR EN VRAI JEU ===
+            const powerType = randFrom(getAvailablePowerTypes(sessionData, player.name));
+            const timer = setTimeout(()=>{
+              const currentPowerState = (sessionData&&sessionData.powerState) || {shields:{},targetLock:null,pendingAction:null};
+              const nextPowerState = {
+                shields:{...(currentPowerState.shields||{})},
+                targetLock:currentPowerState.targetLock||null,
+                pendingAction:null
+              };
+              const allOthers = getOtherPlayerNames(sessionData, player.name);
+              let effectiveTargets = [];
+              if (OFFENSIVE_POWER_TYPES.includes(powerType)) {
+                effectiveTargets = [...allOthers];
+                if (nextPowerState.targetLock && nextPowerState.targetLock.target && allOthers.includes(nextPowerState.targetLock.target) && nextPowerState.targetLock.target!==player.name) {
+                  effectiveTargets = [nextPowerState.targetLock.target];
+                }
+                nextPowerState.targetLock = null;
+                effectiveTargets = effectiveTargets.filter(name=>{
+                  if (nextPowerState.shields[name]) {
+                    delete nextPowerState.shields[name];
+                    return false;
+                  }
+                  return true;
+                });
+              }
+
+              let powerMessage = "";
+              let powerPhrase = "";
+              const writes = [];
+              const powerEvent = {player:player.name,type:powerType,timestamp:Date.now()};
+
+              if (powerType==="freeze") {
+                const freezeTargets = buildFreezeTargets(sessionData, player.name);
+                const filteredTargets = {};
+                effectiveTargets.forEach(name=>{
+                  if (freezeTargets[name]!==undefined) filteredTargets[name] = freezeTargets[name];
+                });
+                powerMessage = player.name+" active le pouvoir Freeze ! ❄️";
+                powerPhrase = Object.keys(filteredTargets).length>0
+                  ? "Une case non cochée est gelée chez les autres."
+                  : "Mais personne n'a pu être gelé cette fois.";
+                if (Object.keys(filteredTargets).length>0) {
+                  powerEvent.targets = filteredTargets;
+                }
+              } else if (powerType==="shuffle") {
+                powerMessage = player.name+" active le pouvoir Shuffle ! 🔀";
+                powerPhrase = effectiveTargets.length>0
+                  ? "Les grilles des autres sont mélangées, mais leurs cases cochées restent cochées."
+                  : "Mais tous les joueurs visés étaient protégés.";
+                effectiveTargets.forEach(name=>{
+                  const currentCard = (sessionData.cards&&sessionData.cards[name])||[];
+                  const currentMarked = ((sessionData.marked||{})[name])||{};
+                  const shuffledState = shuffleBoardState(currentCard, currentMarked, size);
+                  writes.push(db.ref("sessions/"+sessionCode+"/cards/"+name).set(shuffledState.card));
+                  writes.push(db.ref("sessions/"+sessionCode+"/marked/"+name).set(shuffledState.marked));
+                });
+              } else if (powerType==="shield") {
+                nextPowerState.shields[player.name] = true;
+                powerMessage = player.name+" active un Bouclier ! 🛡️";
+                powerPhrase = "Le prochain pouvoir adverse qui devait le toucher sera bloqué.";
+              } else if (powerType==="target") {
+                nextPowerState.pendingAction = {type:"target",owner:player.name,createdAt:Date.now(),targets:allOthers};
+                powerMessage = player.name+" active Ciblage ! 🎯";
+                powerPhrase = "Il choisit maintenant qui recevra seul le prochain pouvoir offensif.";
+              } else if (powerType==="bomb") {
+                powerMessage = player.name+" active Bombe ! 💣";
+                powerPhrase = effectiveTargets.length>0
+                  ? "Les autres perdent chacun une case déjà cochée."
+                  : "Mais tous les joueurs visés étaient protégés.";
+                effectiveTargets.forEach(name=>{
+                  const currentMarked = {...(((sessionData.marked||{})[name])||{})};
+                  const choices = Object.keys(currentMarked).map(Number).filter(index=>index!==getFreeIndex(size));
+                  if (choices.length>0) {
+                    delete currentMarked[randFrom(choices)];
+                    writes.push(db.ref("sessions/"+sessionCode+"/marked/"+name).set(currentMarked));
+                  }
+                });
+              } else if (powerType==="sabotage") {
+                const validTargets = effectiveTargets.filter(name=>getSelectableMarkedIndices(sessionData, name).length>0);
+                powerMessage = player.name+" active Sabotage ! 🧨";
+                powerPhrase = validTargets.length>0
+                  ? "Il choisit une case déjà cochée à retirer chez un adversaire."
+                  : "Mais aucun adversaire ne pouvait être saboté.";
+                if (validTargets.length>0) {
+                  nextPowerState.pendingAction = {type:"sabotage",owner:player.name,createdAt:Date.now(),targets:validTargets};
+                }
+              } else if (powerType==="ghost") {
+                // Choisir une case non cochée aléatoire chez chaque adversaire ciblé
+                const ghostFreezeTargets = buildFreezeTargets(sessionData, player.name);
+                const allWords = getWordPool(wordLists);
+                // Leurre = uniquement des mots de niveau "facile"
+                const getLevel = w => wordLevels[encodeURIComponent(w).replace(/\./g,'%2E')] || null;
+                const easyWords = allWords.filter(w => getLevel(w) === 'facile');
+                const fakeWordPool = easyWords.length >= 3 ? easyWords : allWords; // fallback si pas assez de facile
+                powerMessage = player.name+" active le pouvoir Ghost ! 👻";
+                let ghostApplied = false;
+                effectiveTargets.forEach(name=>{
+                  const targetIndex = ghostFreezeTargets[name];
+                  if (targetIndex===undefined) return;
+                  const targetCard = (sessionData.cards&&sessionData.cards[name])||[];
+                  const realWord = targetCard[targetIndex];
+                  if (!realWord || realWord==="FREE") return;
+                  // Choisir un faux mot différent du vrai et forcément de niveau facile
+                  const candidates = fakeWordPool.filter(w=>w!==realWord);
+                  const fakeWord = candidates.length>0 ? randFrom(candidates) : realWord+"?";
+                  // Remplacer le mot dans la carte de la victime
+                  const nextCard = [...targetCard];
+                  nextCard[targetIndex] = fakeWord;
+                  writes.push(db.ref("sessions/"+sessionCode+"/cards/"+name).set(nextCard));
+                  // Stocker la ghost cell : index -> {realWord, fakeWord}
+                  writes.push(db.ref("sessions/"+sessionCode+"/ghostCells/"+name+"/"+targetIndex).set({realWord, fakeWord}));
+                  ghostApplied = true;
+                });
+                powerPhrase = ghostApplied
+                  ? "Une case devient un leurre : si coch\u00e9e, elle se r\u00e9v\u00e8le et n'est pas comptabilis\u00e9e !"
+                  : "Mais personne n'a pu être piégé cette fois.";
+              } else if (powerType==="trap") {
+                const trapFreezeTargets = buildFreezeTargets(sessionData, player.name);
+                powerMessage = player.name+" active le pouvoir Trap ! 🪤";
+                let trapApplied = false;
+                effectiveTargets.forEach(name=>{
+                  const targetIndex = trapFreezeTargets[name];
+                  if (targetIndex===undefined) return;
+                  const targetCard = (sessionData.cards&&sessionData.cards[name])||[];
+                  const targetWord = targetCard[targetIndex];
+                  if (!targetWord || targetWord==="FREE") return;
+                  const gage = randFrom(TRAP_GAGES);
+                  writes.push(db.ref("sessions/"+sessionCode+"/trapCells/"+name+"/"+targetIndex).set({
+                    gage,
+                    owner: player.name,
+                    voters: {},
+                    pending: false
+                  }));
+                  trapApplied = true;
+                });
+                powerPhrase = trapApplied
+                  ? "Une case est piégée ! Le joueur devra réaliser un gage pour la valider !"
+                  : "Mais personne n'a pu être piégé cette fois.";
+              }
+
+              writes.push(db.ref("sessions/"+sessionCode+"/powerState").set(nextPowerState));
+              writes.push(db.ref("sessions/"+sessionCode+"/events").push({
+                ...powerEvent,
+                message:powerMessage,
+                phrase:powerPhrase
+              }));
+              clearFreezeEffect();
+              setPowerAnim({type:powerType, id:"self-"+localPowerId});
+              Promise.all(writes);
+            }, POWER_NOTIFICATION_DELAY);
+            notifTimersRef.current.push(timer);
+            scheduleNotif({
+              id:"power-local-"+localPowerId,
+              player:player.name,
+              message:
+                powerType==="freeze" ? (player.name+" active le pouvoir Freeze ! ❄️") :
+                powerType==="shuffle" ? (player.name+" active le pouvoir Shuffle ! 🔀") :
+                powerType==="shield" ? (player.name+" active un Bouclier ! 🛡️") :
+                powerType==="target" ? (player.name+" active Ciblage ! 🎯") :
+                powerType==="bomb" ? (player.name+" active Bombe ! 💣") :
+                powerType==="ghost" ? (player.name+" active Ghost ! 👻") :
+                powerType==="trap" ? (player.name+" active Trap ! 🪤") :
+                (player.name+" active Sabotage ! 🧨"),
+              phrase:
+                powerType==="freeze" ? "Une case non cochée est gelée chez les autres." :
+                powerType==="shuffle" ? "Les grilles des autres sont melangees." :
+                powerType==="shield" ? "Le prochain pouvoir adverse qui devait le toucher sera bloqué." :
+                powerType==="target" ? "Il choisit maintenant qui recevra seul le prochain pouvoir offensif." :
+                powerType==="bomb" ? "Les autres perdent chacun une case déjà cochée." :
+                powerType==="ghost" ? "Une case devient un leurre chez les adversaires !" :
+                powerType==="trap" ? "Une case est pi\u00e9g\u00e9e avec un gage !" :
+                "Il choisit une case d\u00e9j\u00e0 coch\u00e9e \u00e0 retirer chez un adversaire.",
+              photo:player.photo||null,
+              streak:player.streak||0
+            }, POWER_NOTIFICATION_DELAY);
+          }
+        }
+      });
+    }
+
+    // BINGO total
+    if (nm.size===totalCells) {
+      gameRef.current=false;
+      if (isLabMode) setSessionData(sd=>sd ? ({...sd,winner:player.name,status:"finished"}) : sd);
+      else db.ref("sessions/"+sessionCode).update({winner:player.name,status:"finished"});
+      if (!isLabMode) {
+        db.ref("sessions/"+sessionCode+"/events").push({
+          player:player.name,message:"a remporté la partie ! BINGO TOTAL 🏆",type:"bingo",timestamp:Date.now()
+        });
+        const ranked = isStandardRankedMode(sessionData);
+        const newStreak = ranked ? (player.streak||0)+1 : (player.streak||0);
+        const difficultyWinKey = getDifficultyWinKey((sessionData&&sessionData.difficulty) || "normal");
+        const np = {
+          ...player,
+          wins:(player.wins||0)+1,
+          [difficultyWinKey]:(player[difficultyWinKey]||0)+1,
+          gamesPlayed:(player.gamesPlayed||0)+1,
+          streak: ranked ? newStreak : (player.streak||0),
+          bestStreak: ranked ? Math.max(newStreak,player.bestStreak||0) : (player.bestStreak||0)
+        };
+        savePlayer(np);
+        // Incrémenter gamesPlayed + réinitialiser série pour les perdants
+        const allPlayers = Object.keys((sessionData&&sessionData.players)||{});
+        allPlayers.filter(n=>n!==player.name).forEach(name=>{
+          db.ref("users/"+name).once("value").then(snap=>{
+            const lp = normalizePlayer(snap.val()||{name});
+            db.ref("users/"+name).update({
+              gamesPlayed:(lp.gamesPlayed||0)+1,
+              streak: ranked ? 0 : (lp.streak||0)
+            });
+          });
+        });
+        const summary = buildSessionSummary(sessionCode, sessionData, player.name, {
+          [player.name]: {lineCount:scoringLines.length}
+        });
+        db.ref("meta/lastSession").set(summary);
+      }
+      setShowConfetti(true); setTimeout(()=>setShowConfetti(false),5500);
+      setScreen("winner");
+    }
+  },[card,marked,sessionData,sessionCode,player,savePlayer,isLabMode,freezeState,scheduleNotif,wordLevels,wordLists]);
+
+  useEffect(()=>{
+    handleToggleRef.current = handleToggle;
+  },[handleToggle]);
+
+  const runLabSequence = useCallback(indices=>{
+    clearLabTimers();
+    indices.forEach((index, step)=>{
+      const timer = setTimeout(()=>{
+        if (handleToggleRef.current) handleToggleRef.current(index);
+      }, step*180);
+      labTimersRef.current.push(timer);
+    });
+  },[clearLabTimers]);
+
+  const handleLabAction = useCallback(action=>{
+    if (!isLabMode || !sessionData) return;
+    const size = getBoardSize(sessionData);
+    const freeIndex = getFreeIndex(size);
+
+    if (action==="ligne" || action==="colonne") {
+      // Filtrer les lignes/colonnes du bon type qui ne sont pas encore completees
+      const allOfType = buildLines(size).filter(l=>l.type===action);
+      const incomplete = allOfType.filter(l=>l.cells.some(i=>i!==freeIndex && !marked.has(i)));
+      if (incomplete.length===0) return;
+      // Choisir une ligne aleatoire parmi les incompletes
+      const chosen = incomplete[Math.floor(Math.random()*incomplete.length)];
+      const seq = chosen.cells.filter(i=>i!==freeIndex && !marked.has(i));
+      runLabSequence(seq);
+      return;
+    }
+    if (action==="bingo") {
+      const seq = Array.from({length:size*size},(_,i)=>i).filter(i=>i!==freeIndex && !marked.has(i));
+      runLabSequence(seq);
+      return;
+    }
+    if (action==="reset") {
+      clearLabTimers();
+      clearNotifTimers();
+      clearFreezeEffect();
+      const nextCard = genCardWithLevels(getWordPool(wordLists), size, wordLevels);
+      setSessionData(sd=>sd ? ({...sd,status:"playing",winner:null,cards:{[player.name]:nextCard},marked:{},powerState:{shields:{},targetLock:null,pendingAction:null}}) : sd);
+      setCard(nextCard);
+      setMarked(getInitialMarkedSet(size));
+      setNotifQueue([]);
+      setCurrentNotif(null);
+      clRef.current=new Set();
+      seenRef.current=new Set();
+      gameRef.current=true;
+      setShowConfetti(false);
+    }
+  },[isLabMode,sessionData,marked,player,runLabSequence,clearLabTimers,clearNotifTimers,clearFreezeEffect,wordLists,wordLevels]);
+
+  // Rematch : remet la session en salle d'attente
+  const handleRematch = ()=>{
+    if (isLabMode) {
+      startLabGame((sessionData&&sessionData.difficulty)||"normal");
+      return;
+    }
+    clearNotifTimers();
+    clearFreezeEffect();
+    clearDurationTimer();
+    db.ref("sessions/"+sessionCode).update({
+      status:"waiting", cards:{}, marked:{}, winner:null, events:null, endsAt:null, startedAt:null,
+      powerState:{shields:{},targetLock:null,pendingAction:null}, ghostCells:{}, trapCells:{}
+    });
+  };
+
+  // Quitter definitivement la session
+  const handleLeave = ()=>{
+    if (isLabMode) {
+      clearLabTimers();
+      clearNotifTimers();
+      clearFreezeEffect();
+      clearDurationTimer();
+      setIsLabMode(false);
+      setSessionCode("");
+      setSessionData(null);
+      setNotifQueue([]); setCurrentNotif(null);
+      setCard([]); setMarked(getInitialMarkedSet(5)); gameRef.current=false;
+      setScreen("profile");
+      return;
+    }
+    if (sessionCode) db.ref("sessions/"+sessionCode+"/players/"+player.name).remove();
+    clearLabTimers();
+    clearNotifTimers();
+    clearFreezeEffect();
+    clearDurationTimer();
+    setSessionCode(""); setSessionData(null); setNotifQueue([]); setCurrentNotif(null);
+    setCard([]); setMarked(getInitialMarkedSet(5)); gameRef.current=false;
+    localStorage.removeItem("bp-session"); setScreen("lobby");
+  };
+
+  // Stats perdant
+  useEffect(()=>{
+    if (screen==="winner"&&sessionData&&sessionData.winner&&sessionData.winner!==player.name&&player&&!statsRef.current&&!isLabMode) {
+      statsRef.current=true;
+      savePlayer({
+        ...player,
+        gamesPlayed:(player.gamesPlayed||0)+1,
+        streak:isStandardRankedMode(sessionData) ? 0 : (player.streak||0)
+      });
+    }
+  },[screen, sessionData?.winner]);
+
+  const loading = <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",color:"rgba(240,232,200,0.3)",fontSize:"1.1rem"}}>Chargement...</div>;
+
+  if (screen==="loading")  return loading;
+  if (screen==="login")    return <LoginScreen onLogin={handleLogin}/>;
+  if (screen==="profile")  return <ProfileScreen player={player} savePlayer={savePlayer} onContinue={()=>setScreen("lobby")} onLab={()=>setScreen("lab")}/>;
+  if (screen==="lab")      return <LabScreen player={player} onBack={()=>setScreen("profile")} onStartLab={startLabGame} onPlayers={()=>setScreen("labPlayers")}/>;
+  if (screen==="labPlayers") return <LabPlayersScreen onBack={()=>setScreen("lab")}/>;
+  if (screen==="lobby")    return <>{<LobbyScreen player={player} onProfile={()=>setScreen("profile")} onCreate={handleCreate} onJoin={handleJoin} onWords={()=>setScreen("words")} allUsers={allUsers} lastSessionSummary={lastSessionSummary}/>}{invite && Date.now()-inviteDismissed>5000 && <InvitePopup invite={invite} player={player} onJoin={(code)=>{setInvite(null);setInviteDismissed(Date.now());handleJoin(code);}} onDismiss={()=>{setInviteDismissed(Date.now());setInvite(null);}}/>}</>;
+  if (screen==="words")    return <WordsScreen onBack={()=>setScreen("lobby")} player={player} wordLists={wordLists} wordSuggestions={wordSuggestions} onSuggestWord={handleSuggestWord} onVoteSuggestion={handleVoteSuggestion}/>;
+  if (screen==="waiting")  return <WaitingScreen sessionCode={sessionCode} sessionData={sessionData} player={player} onStart={handleStart} onLeave={handleLeave} onConfigChange={handleConfigChange}/>;
+  if (screen==="latejoin") return <LateJoinScreen sessionData={sessionData} player={player} onLeave={handleLeave}/>;
+  if (screen==="game")     return <GameScreen player={player} card={card} marked={marked} sessionData={sessionData} sessionCode={sessionCode} currentNotif={currentNotif} onToggle={handleToggle} onLeave={handleLeave} showConfetti={showConfetti} clearNotif={()=>setCurrentNotif(null)} isLabMode={isLabMode} onLabAction={handleLabAction} freezeState={freezeState} pendingPowerAction={sessionData&&sessionData.powerState&&sessionData.powerState.pendingAction} onResolvePowerAction={handleResolvePowerAction} powerAnim={powerAnim} clearPowerAnim={()=>setPowerAnim(null)} onEndGame={()=>{ db.ref("sessions/"+sessionCode).once("value").then(snap=>{ if(snap.exists()&&snap.val().status==="playing") handleEndGame(snap.val(), sessionCode); }); }}/>;
+  if (screen==="winner")   return <WinnerScreen sessionData={sessionData} player={player} onRematch={handleRematch} onLeave={handleLeave} showConfetti={showConfetti} isHost={sessionData&&sessionData.host===player.name}/>;
+  return null;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
+
