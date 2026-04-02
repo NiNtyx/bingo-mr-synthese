@@ -107,7 +107,7 @@ if (IS_CONFIGURED) {
 const INITIAL_BTS_REFS = [
   "Guenille", "Confère synthèse", "Jeux débile", "Rigueur", "Non de Dieu !",
   "Serrage de main", "Claquer des doigts", "NON NON NON", "Salaud", "Connard",
-  "Tapage de dos", "Papier biten", "Nouille", "Burne", "Basta",
+  "Tapage de dos", "Tapage clavier", "Papier biten", "Nouille", "Burne", "Basta",
   "Fissa", "Fait donc du poly", "Dis donc...", "Seigneur", "Faudra m'expliquer",
   "Bouge-toi les miches", "Putain la vache", "Gros mimi bisous", "C'est beau l'électrotech",
   "Mon grand", "Mon garçon", "Fais donc du portable dehors", "Trois chiffres significatifs",
@@ -127,6 +127,7 @@ const getWordPool = lists => {
 };
 
 const GAME_NAME = "Bingo Mr Synthèse";
+const GAME_VERSION = "1.4.1";
 const EXCLUDED_PLAYERS = ["teste", "teste2"]; // noms en minuscules
 const LAB_USERS = ["enzo", "matys"]; // joueurs ayant acces au laboratoire
 const DIFFICULTY_CONFIGS = {
@@ -1572,6 +1573,7 @@ function LobbyScreen({player, onProfile, onCreate, onJoin, onWords, allUsers, la
         </div>
         <div style={{textAlign:"center",marginBottom:"2.5rem"}}>
           <div style={{fontSize:"clamp(2rem,7vw,4rem)",fontFamily:"Georgia,serif",fontWeight:900,letterSpacing:"0.2em",color:"#f7c948",textShadow:"0 0 30px rgba(247,201,72,0.3)",lineHeight:1.1}}>{GAME_NAME}</div>
+          <div style={{fontSize:"0.65rem",color:"rgba(247,201,72,0.35)",letterSpacing:"0.08em",marginTop:"0.3rem"}}>v{GAME_VERSION}</div>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
           <button className="btn" onClick={onCreate} style={{width:"100%",fontSize:"1.05rem",padding:"1rem"}}>+ Créer une session</button>
@@ -1896,7 +1898,7 @@ function WordsScreen({onBack, player, wordLists, wordSuggestions, onSuggestWord,
           <div style={{marginTop:"1.4rem",paddingTop:"1.2rem",borderTop:"1px solid rgba(255,255,255,0.08)"}}>
             <div style={{fontSize:"1.15rem",fontWeight:800,color:"#f7c948",marginBottom:"0.35rem"}}>Liste d'attente des propositions</div>
             <div style={{fontSize:"0.8rem",color:"rgba(240,232,200,0.45)",marginBottom:"0.9rem"}}>
-              +3 votes ajoute le mot à la liste officielle, -3 votes supprime la proposition.
+              +2 votes ajoute le mot à la liste officielle, -2 votes supprime la proposition.
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:"0.65rem",marginBottom:"1rem"}}>
               {suggestions.length===0 && (
@@ -1910,7 +1912,7 @@ function WordsScreen({onBack, player, wordLists, wordSuggestions, onSuggestWord,
                   <div key={suggestion.id} style={{display:"flex",alignItems:"center",gap:"0.75rem",background:"rgba(255,255,255,0.035)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"0.8rem 0.9rem",flexWrap:"wrap"}}>
                     <div style={{flex:1,minWidth:180}}>
                       <div style={{fontWeight:700}}>{suggestion.word}</div>
-                      <div style={{fontSize:"0.74rem",color:"rgba(240,232,200,0.42)"}}>Proposé par {suggestion.createdBy||"?"} - Score {suggestion.score}</div>
+                      <div style={{fontSize:"0.74rem",color:"rgba(240,232,200,0.42)"}}>Proposé par {suggestion.createdBy||"?"} — Score {suggestion.score}</div>
                     </div>
                     <div style={{display:"flex",gap:"0.45rem"}}>
                       <button className={myVote===1?"btn":"btn-ghost"} onClick={()=>onVoteSuggestion(suggestion.id,1)} style={{padding:"0.55rem 0.8rem",fontSize:"0.84rem"}}>👍</button>
@@ -1921,8 +1923,19 @@ function WordsScreen({onBack, player, wordLists, wordSuggestions, onSuggestWord,
               })}
             </div>
             <div style={{display:"flex",gap:"0.7rem",alignItems:"stretch"}}>
-              <input value={draftWord} onChange={e=>setDraftWord(e.target.value)} placeholder="Proposer un nouveau mot..." />
-              <button className="btn" onClick={()=>{ onSuggestWord(draftWord); setDraftWord(""); }} disabled={!draftWord.trim()} style={{width:"auto",flexShrink:0}}>Proposer</button>
+              <input value={draftWord} onChange={e=>setDraftWord(e.target.value)} placeholder="Proposer un nouveau mot..."
+                onKeyDown={e=>{ if(e.key==="Enter"&&draftWord.trim()){ onSuggestWord(draftWord); setDraftWord(""); }}}
+              />
+              <button className="btn" onClick={()=>{
+                const clean = draftWord.trim();
+                if (!clean) return;
+                const alreadyIn = words.some(w=>w.toLowerCase()===clean.toLowerCase());
+                if (alreadyIn) { alert('"'+clean+'" est déjà dans la liste officielle.'); return; }
+                const alreadyPending = suggestions.some(s=>s.word.toLowerCase()===clean.toLowerCase());
+                if (alreadyPending) { alert('"'+clean+'" est déjà en attente de validation.'); return; }
+                onSuggestWord(clean);
+                setDraftWord("");
+              }} disabled={!draftWord.trim()} style={{width:"auto",flexShrink:0}}>Proposer</button>
             </div>
           </div>
         </div>
@@ -2531,6 +2544,13 @@ function App() {
     listRef.once("value").then(snap=>{
       if (!snap.exists()) {
         listRef.set({bts:INITIAL_BTS_REFS});
+      } else {
+        // Fusionner les nouveaux mots de INITIAL_BTS_REFS dans la liste Firebase
+        const existing = (snap.val()&&snap.val().bts) || [];
+        const toAdd = INITIAL_BTS_REFS.filter(w=>!existing.some(e=>e.toLowerCase()===w.toLowerCase()));
+        if (toAdd.length > 0) {
+          listRef.child("bts").set([...existing, ...toAdd]);
+        }
       }
     });
     const listHandler = snap=>{
@@ -2917,7 +2937,7 @@ function App() {
     const votes = {...(suggestion.votes||{})};
     votes[player.name] = vote;
     const score = Object.values(votes).reduce((sum,val)=>sum+(val||0),0);
-    if (score >= 3) {
+    if (score >= 2) {
       const list = getWordPool(wordLists);
       if (!list.some(item=>item.toLowerCase()===(suggestion.word||"").toLowerCase())) {
         db.ref("wordLists/bts").set([...list, suggestion.word]);
@@ -2925,7 +2945,7 @@ function App() {
       db.ref("wordSuggestions/"+suggestionId).remove();
       return;
     }
-    if (score <= -3) {
+    if (score <= -2) {
       db.ref("wordSuggestions/"+suggestionId).remove();
       return;
     }
