@@ -2456,7 +2456,7 @@ function App() {
     gameRef.current = false;
     clearDurationTimer();
     const winner = resolveTimedWinner(sd);
-    if (!winner) return; // sécurité si partie vide
+    if (!winner) return;
     db.ref("sessions/"+code).update({winner, status:"finished"});
     db.ref("sessions/"+code+"/events").push({
       player: winner,
@@ -2464,33 +2464,40 @@ function App() {
       type:"bingo", timestamp:Date.now()
     });
     const ranked = isStandardRankedMode(sd);
+    const difficultyWinKey = getDifficultyWinKey((sd&&sd.difficulty)||"normal");
     const allPlayers = Object.keys((sd&&sd.players)||{});
-    // Mettre à jour les stats de TOUS les joueurs
     allPlayers.forEach(name=>{
       db.ref("users/"+name).once("value").then(snap=>{
         const wp = normalizePlayer(snap.val()||{name});
         if (name===winner) {
           const newStreak = ranked ? (wp.streak||0)+1 : (wp.streak||0);
-          const difficultyWinKey = getDifficultyWinKey((sd&&sd.difficulty)||"normal");
-          db.ref("users/"+name).update({
+          const updates = {
             wins:(wp.wins||0)+1,
             [difficultyWinKey]:(wp[difficultyWinKey]||0)+1,
             gamesPlayed:(wp.gamesPlayed||0)+1,
             streak: ranked ? newStreak : (wp.streak||0),
             bestStreak: ranked ? Math.max(newStreak, wp.bestStreak||0) : (wp.bestStreak||0)
-          });
+          };
+          db.ref("users/"+name).update(updates);
+          // Mettre à jour le state local si c'est le joueur courant
+          if (player && name===player.name) {
+            savePlayer({...wp, ...updates});
+          }
         } else {
-          // Perdants : incrémenter gamesPlayed et réinitialiser la série
-          db.ref("users/"+name).update({
+          const updates = {
             gamesPlayed:(wp.gamesPlayed||0)+1,
             streak: ranked ? 0 : (wp.streak||0)
-          });
+          };
+          db.ref("users/"+name).update(updates);
+          if (player && name===player.name) {
+            savePlayer({...wp, ...updates});
+          }
         }
       });
     });
     const summary = buildSessionSummary(code, sd, winner, {});
     db.ref("meta/lastSession").set(summary);
-  },[clearDurationTimer]);
+  },[clearDurationTimer, player, savePlayer]);
   const applyFreezeEffect = useCallback(ev=>{
     if (!player || !ev || !ev.targets) return;
     const frozenIndex = ev.targets[player.name];
@@ -2630,42 +2637,44 @@ function App() {
     clearNotifTimers();
     clearFreezeEffect();
     const refs = getWordPool(wordLists);
-    const nextCard = genCardWithLevels(refs, cfg.size, wordLevels);
-    const LAB_CODE = "LABO";
-    // Créer une vraie session Firebase avec le code fixe LABO
-    // Tous les joueurs qui rejoignent LABO jouent ensemble mais sans stats
-    const labSession = {
-      host: player.name,
-      status: "playing",
-      difficulty,
-      powerMode,
-      isLabSession: true, // flag pour désactiver les stats
-      players: {[player.name]: true},
-      cards: {[player.name]: nextCard},
-      marked: {},
-      stats: {},
-      winner: null,
-      events: null,
-      powerState: {shields:{}, targetLock:null, pendingAction:null},
-      ghostCells: {},
-      trapCells: {},
-      startedAt: Date.now(),
-      endsAt: null
-    };
-    db.ref("sessions/"+LAB_CODE).set(labSession).then(()=>{
-      setIsLabMode(true);
-      setSessionCode(LAB_CODE);
-      setSessionData(labSession);
-      setCard(nextCard);
-      setMarked(getInitialMarkedSet(cfg.size));
-      setNotifQueue([]);
-      setCurrentNotif(null);
-      clRef.current = new Set();
-      seenRef.current = new Set();
-      statsRef.current = false;
-      gameRef.current = true;
-      localStorage.setItem("bp-session", LAB_CODE);
-      setScreen("game");
+    // Lire wordLevels frais depuis Firebase pour garantir les bons niveaux
+    db.ref("wordLevels").once("value").then(snap=>{
+      const freshLevels = snap.val() || wordLevels;
+      const nextCard = genCardWithLevels(refs, cfg.size, freshLevels);
+      const LAB_CODE = "LABO";
+      const labSession = {
+        host: player.name,
+        status: "playing",
+        difficulty,
+        powerMode,
+        isLabSession: true,
+        players: {[player.name]: true},
+        cards: {[player.name]: nextCard},
+        marked: {},
+        stats: {},
+        winner: null,
+        events: null,
+        powerState: {shields:{}, targetLock:null, pendingAction:null},
+        ghostCells: {},
+        trapCells: {},
+        startedAt: Date.now(),
+        endsAt: null
+      };
+      db.ref("sessions/"+LAB_CODE).set(labSession).then(()=>{
+        setIsLabMode(true);
+        setSessionCode(LAB_CODE);
+        setSessionData(labSession);
+        setCard(nextCard);
+        setMarked(getInitialMarkedSet(cfg.size));
+        setNotifQueue([]);
+        setCurrentNotif(null);
+        clRef.current = new Set();
+        seenRef.current = new Set();
+        statsRef.current = false;
+        gameRef.current = true;
+        localStorage.setItem("bp-session", LAB_CODE);
+        setScreen("game");
+      });
     });
   },[player, clearLabTimers, clearNotifTimers, clearFreezeEffect, wordLists, wordLevels]);
 
@@ -2964,25 +2973,29 @@ function App() {
       const ps = Object.keys(latest.players||{});
       const size = getBoardSize(latest);
       const refs = getWordPool(wordLists);
-      const cards = {};
-      ps.forEach(p=>{ cards[p]=genCardWithLevels(refs, size, wordLevels); });
-      const duration = latest.duration || null;
-      const startedAt = Date.now();
-      const endsAt = duration ? startedAt+duration : null;
-      db.ref("sessions/"+sessionCode).update({
-        status:"playing",
-        cards,
-        marked:{},
-        stats:{},
-        winner:null,
-        events:null,
-        startedAt,
-        endsAt,
-        difficulty:latest.difficulty||"normal",
-        powerMode:!!latest.powerMode,
-        powerState:{shields:{},targetLock:null,pendingAction:null},
-        ghostCells:{},
-        trapCells:{}
+      // Lire wordLevels frais depuis Firebase
+      db.ref("wordLevels").once("value").then(lvSnap=>{
+        const freshLevels = lvSnap.val() || wordLevels;
+        const cards = {};
+        ps.forEach(p=>{ cards[p]=genCardWithLevels(refs, size, freshLevels); });
+        const duration = latest.duration || null;
+        const startedAt = Date.now();
+        const endsAt = duration ? startedAt+duration : null;
+        db.ref("sessions/"+sessionCode).update({
+          status:"playing",
+          cards,
+          marked:{},
+          stats:{},
+          winner:null,
+          events:null,
+          startedAt,
+          endsAt,
+          difficulty:latest.difficulty||"normal",
+          powerMode:!!latest.powerMode,
+          powerState:{shields:{},targetLock:null,pendingAction:null},
+          ghostCells:{},
+          trapCells:{}
+        });
       });
     });
   };
