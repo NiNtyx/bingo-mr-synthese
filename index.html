@@ -219,27 +219,35 @@ const genCard = (refs, size) => {
   return card;
 };
 
-// Génère une grille en respectant les quotas de niveaux de mots
-// Max 1 hard et 1 difficile par grille (mots restants = facile/moyen/sans niveau)
+// Génère une grille en respectant les quotas de niveaux de mots selon la difficulté
 const genCardWithLevels = (refs, size, wordLevels) => {
   const total = getTotalCells(size);
   const freeIndex = getFreeIndex(size);
   const neededRefs = freeIndex===null ? total : total-1;
 
-  // Fonction qui retourne le niveau d'un mot
   const getLevel = word => wordLevels[encodeURIComponent(word).replace(/\./g,'%2E')] || null;
 
-  // Si pas de niveaux définis, fallback sur genCard classique
   const hasAnyLevel = refs.some(w => getLevel(w) !== null);
   if (!hasAnyLevel) return genCard(refs, size);
 
-  // Séparer les mots par niveau
   const byLevel = {hard:[], difficile:[], moyen:[], facile:[], none:[]};
   refs.forEach(w => { const lv = getLevel(w); byLevel[lv||"none"].push(w); });
 
-  // Quotas : max 1 hard, max 1 difficile, le reste = facile/moyen/sans niveau
-  const maxHard = 1;
-  const maxDifficile = 1;
+  // Quotas selon la taille de grille
+  // 3x3 (8 cases) : 0 hard possible, max 1 difficile rarement (20% de chance)
+  // 4x4 (16 cases) : max 1 hard, max 1 difficile
+  // 5x5 (24 cases) : max 1 hard, max 2 difficile
+  let maxHard, maxDifficile;
+  if (size === 3) {
+    maxHard = 0; // Jamais de hard en 3x3
+    maxDifficile = Math.random() < 0.2 ? 1 : 0; // 20% de chance d'avoir 1 difficile
+  } else if (size === 4) {
+    maxHard = Math.random() < 0.3 ? 1 : 0; // 30% de chance d'avoir 1 hard
+    maxDifficile = 1;
+  } else {
+    maxHard = 1;
+    maxDifficile = 2;
+  }
 
   const pickedHard = shuffle(byLevel.hard).slice(0, maxHard);
   const pickedDifficile = shuffle(byLevel.difficile).slice(0, maxDifficile);
@@ -248,7 +256,6 @@ const genCardWithLevels = (refs, size, wordLevels) => {
   const remaining = neededRefs - pickedHard.length - pickedDifficile.length;
   const pickedEasySlice = pickedEasy.slice(0, remaining);
 
-  // Si pas assez de mots easy, compléter avec difficult/hard en débordement
   let pool = [...pickedHard, ...pickedDifficile, ...pickedEasySlice];
   if (pool.length < neededRefs) {
     const extra = shuffle([...byLevel.hard, ...byLevel.difficile]).filter(w=>!pool.includes(w));
@@ -1885,17 +1892,27 @@ function GameScreen({player, card, marked, sessionData, sessionCode, currentNoti
   const [showStopConfirm, setShowStopConfirm] = useState(false);
   const [countdown, setCountdown] = useState(null);
 
-  // Countdown timer
+  // Countdown timer — le host termine la partie quand le chrono atteint 0
+  const endGameCalledRef = React.useRef(false);
+  useEffect(()=>{
+    endGameCalledRef.current = false; // reset à chaque nouvelle partie
+  },[endsAt]);
   useEffect(()=>{
     if (!endsAt || isGameOver) { setCountdown(null); return; }
     const tick = ()=>{
       const rem = endsAt - Date.now();
       setCountdown(rem > 0 ? rem : 0);
+      if (rem <= 0 && isHost && !isLabMode && !endGameCalledRef.current) {
+        endGameCalledRef.current = true;
+        db.ref("sessions/"+sessionCode).once("value").then(snap=>{
+          if (snap.exists() && snap.val().status==="playing") onEndGame();
+        });
+      }
     };
     tick();
     const interval = setInterval(tick, 1000);
     return ()=>clearInterval(interval);
-  },[endsAt, isGameOver]);
+  },[endsAt, isGameOver, isHost, isLabMode, sessionCode, onEndGame]);
 
   const formatCountdown = ms=>{
     if (ms===null||ms===undefined) return null;
@@ -1982,6 +1999,11 @@ function GameScreen({player, card, marked, sessionData, sessionCode, currentNoti
         <div style={{marginLeft:"auto",display:"flex",gap:"0.35rem",alignItems:"center"}}>
           {players.filter(p=>p!==player.name).slice(0,5).map(p=><MiniPlayerBadge key={p} name={p} isHost={p===(sessionData&&sessionData.host)}/>)}
           <span style={{fontSize:"0.7rem",color:"rgba(240,232,200,0.32)",marginLeft:2}}>{players.length} joueurs</span>
+          {sessionCode && (
+            <span style={{fontSize:"0.68rem",fontWeight:800,color:isLabMode?"rgba(247,201,72,0.8)":"rgba(247,201,72,0.55)",background:isLabMode?"rgba(247,201,72,0.12)":"rgba(247,201,72,0.07)",border:"1px solid rgba(247,201,72,0.3)",borderRadius:6,padding:"0.15rem 0.45rem",letterSpacing:"0.12em",fontFamily:"monospace"}}>
+              {isLabMode ? "🔬 "+sessionCode : sessionCode}
+            </span>
+          )}
         </div>
       </div>
 
@@ -2498,6 +2520,9 @@ function App() {
           localStorage.removeItem("bp-session"); setScreen("lobby"); return;
         }
         const s = ss.val(); setSessionData(s); setSessionCode(sc);
+        // Détecter si c'est une session labo
+        const isLab = sc==="LABO" || !!(s.isLabSession);
+        if (isLab) setIsLabMode(true);
         if (s.status==="playing"&&s.cards&&s.cards[fp.name]) {
           setCard(s.cards[fp.name]);
           const mo = (s.marked&&s.marked[fp.name])||{};
@@ -2540,39 +2565,50 @@ function App() {
   },[]);
 
   const startLabGame = useCallback(config=>{
-    // Accepte soit un objet {difficulty, powerMode} soit une string difficulty (compatibilite rematch)
     const difficulty = (typeof config === "string") ? config : (config.difficulty || "normal");
     const powerMode = (typeof config === "string") ? false : !!(config.powerMode);
     const cfg = getDifficultyConfig(difficulty);
     clearLabTimers();
     clearNotifTimers();
     clearFreezeEffect();
+    const refs = getWordPool(wordLists);
+    const nextCard = genCardWithLevels(refs, cfg.size, wordLevels);
+    const LAB_CODE = "LABO";
+    // Créer une vraie session Firebase avec le code fixe LABO
+    // Tous les joueurs qui rejoignent LABO jouent ensemble mais sans stats
     const labSession = {
-      host:player.name,
-      status:"playing",
+      host: player.name,
+      status: "playing",
       difficulty,
-      players:{[player.name]:true},
-      cards:{},
-      marked:{},
-      stats:{},
-      winner:null,
       powerMode,
-      powerState:{shields:{},targetLock:null,pendingAction:null}
+      isLabSession: true, // flag pour désactiver les stats
+      players: {[player.name]: true},
+      cards: {[player.name]: nextCard},
+      marked: {},
+      stats: {},
+      winner: null,
+      events: null,
+      powerState: {shields:{}, targetLock:null, pendingAction:null},
+      ghostCells: {},
+      trapCells: {},
+      startedAt: Date.now(),
+      endsAt: null
     };
-    const nextCard = genCardWithLevels(getWordPool(wordLists), cfg.size, wordLevels);
-    labSession.cards[player.name] = nextCard;
-    setIsLabMode(true);
-    setSessionCode("LAB");
-    setSessionData(labSession);
-    setCard(nextCard);
-    setMarked(getInitialMarkedSet(cfg.size));
-    setNotifQueue([]);
-    setCurrentNotif(null);
-    clRef.current=new Set();
-    seenRef.current=new Set();
-    statsRef.current=false;
-    gameRef.current=true;
-    setScreen("game");
+    db.ref("sessions/"+LAB_CODE).set(labSession).then(()=>{
+      setIsLabMode(true);
+      setSessionCode(LAB_CODE);
+      setSessionData(labSession);
+      setCard(nextCard);
+      setMarked(getInitialMarkedSet(cfg.size));
+      setNotifQueue([]);
+      setCurrentNotif(null);
+      clRef.current = new Set();
+      seenRef.current = new Set();
+      statsRef.current = false;
+      gameRef.current = true;
+      localStorage.setItem("bp-session", LAB_CODE);
+      setScreen("game");
+    });
   },[player, clearLabTimers, clearNotifTimers, clearFreezeEffect, wordLists, wordLevels]);
 
 
@@ -2599,6 +2635,7 @@ function App() {
 
       // En attente -> partie lancee
       if (s.status==="playing"&&screen==="waiting"&&s.cards&&player&&s.cards[player.name]) {
+        if (s.isLabSession || sessionCode==="LABO") setIsLabMode(true);
         setCard(s.cards[player.name]); setMarked(getInitialMarkedSet(getBoardSize(s)));
         clRef.current=new Set();
         seenRef.current=new Set();
@@ -2677,10 +2714,16 @@ function App() {
         return;
       }
       // Tout pouvoir (hors freeze) lève le freeze en cours
-      if (["shuffle","shield","target","bomb","sabotage"].includes(ev.type)) {
+      if (["shuffle","shield","target","bomb","sabotage","ghost","trap"].includes(ev.type)) {
         clearFreezeEffect();
-        // Animation pour tous sauf l'émetteur
-        if (ev.player!==player.name) {
+        if (ev.type==="shield") {
+          // Bouclier : animation ET notification uniquement pour l'émetteur
+          if (ev.player===player.name) {
+            setPowerAnim({type:"shield", id:snap.key});
+          }
+          return; // Pas de notif pour les autres
+        } else if (ev.player!==player.name) {
+          // Autres pouvoirs : animation pour les victimes
           setPowerAnim({type:ev.type, id:snap.key});
         }
       }
@@ -2718,7 +2761,8 @@ function App() {
 
   // Rejoindre session (meme si partie en cours)
   const handleJoin = code=>new Promise((res,rej)=>{
-    setIsLabMode(false);
+    const isLab = code.toUpperCase() === "LABO";
+    setIsLabMode(isLab);
     clearNotifTimers();
     clearFreezeEffect();
     db.ref("sessions/"+code).once("value").then(snap=>{
@@ -2726,20 +2770,38 @@ function App() {
       const s = snap.val();
       const updates = {};
       updates["players/"+player.name] = true;
-      // Chef auto : si le host actuel n'est plus dans les joueurs et que la session attend, on prend le chef
+      // Si la session LABO est en cours, générer une carte pour ce joueur
+      if (isLab && s.status==="playing" && !(s.cards&&s.cards[player.name])) {
+        const cfg = getDifficultyConfig(s.difficulty||"normal");
+        const refs = getWordPool(wordLists);
+        const newCard = genCardWithLevels(refs, cfg.size, wordLevels);
+        updates["cards/"+player.name] = newCard;
+      }
       const currentPlayers = Object.keys(s.players||{});
       const hostStillHere = s.host && currentPlayers.includes(s.host);
       if (!hostStillHere && s.status==="waiting") {
         updates.host = player.name;
       }
       db.ref("sessions/"+code).update(updates).then(()=>{
-        // Relire la session après update pour avoir le bon host
         db.ref("sessions/"+code).once("value").then(snap2=>{
           const s2 = snap2.val()||s;
           setSessionCode(code); setSessionData(s2);
           localStorage.setItem("bp-session",code);
           if (s2.status==="playing") {
-            setScreen("latejoin");
+            if (s2.cards&&s2.cards[player.name]) {
+              // Rejoindre directement en jeu (labo ou partie en cours avec carte)
+              setCard(s2.cards[player.name]);
+              const mo = (s2.marked&&s2.marked[player.name])||{};
+              const ms = getInitialMarkedSet(getBoardSize(s2));
+              Object.keys(mo).map(Number).forEach(i=>ms.add(i));
+              setMarked(ms);
+              clRef.current=new Set();
+              seenRef.current=new Set();
+              statsRef.current=false; gameRef.current=true;
+              setScreen("game");
+            } else {
+              setScreen("latejoin");
+            }
           } else {
             setScreen("waiting");
           }
@@ -2960,7 +3022,9 @@ function App() {
           if (isLabMode) {
             // === POUVOIR EN MODE LABO (local, sans Firebase) ===
             const timer = setTimeout(()=>{
-              const powerType = randFrom(POWER_TYPES);
+              const lastLabPower = sessionData&&sessionData.powerState&&sessionData.powerState.lastPowerType;
+              const labPools = POWER_TYPES.filter(p => p !== lastLabPower);
+              const powerType = randFrom(labPools.length > 0 ? labPools : POWER_TYPES);
               let powerMessage = "";
               let powerPhrase = "";
 
@@ -2990,6 +3054,8 @@ function App() {
                 powerPhrase = "Il retirerait une case chez un adversaire en vrai jeu.";
               }
 
+              // Mémoriser le dernier pouvoir en labo aussi
+              setSessionData(sd => sd ? ({...sd, powerState:{...(sd.powerState||{}), lastPowerType:powerType}}) : sd);
               clearFreezeEffect();
               setPowerAnim({type:powerType, id:"lab-"+localPowerId});
               scheduleNotif({
@@ -3005,7 +3071,11 @@ function App() {
 
           } else {
             // === POUVOIR EN VRAI JEU ===
-            const powerType = randFrom(getAvailablePowerTypes(sessionData, player.name));
+            const currentPS = (sessionData&&sessionData.powerState) || {};
+            const lastPower = currentPS.lastPowerType || null;
+            const allAvailable = getAvailablePowerTypes(sessionData, player.name);
+            const filtered = allAvailable.filter(p => p !== lastPower);
+            const powerType = randFrom(filtered.length > 0 ? filtered : allAvailable);
             const timer = setTimeout(()=>{
               const currentPowerState = (sessionData&&sessionData.powerState) || {shields:{},targetLock:null,pendingAction:null};
               const nextPowerState = {
@@ -3144,6 +3214,7 @@ function App() {
                   : "Mais personne n'a pu être piégé cette fois.";
               }
 
+              nextPowerState.lastPowerType = powerType;
               writes.push(db.ref("sessions/"+sessionCode+"/powerState").set(nextPowerState));
               writes.push(db.ref("sessions/"+sessionCode+"/events").push({
                 ...powerEvent,
