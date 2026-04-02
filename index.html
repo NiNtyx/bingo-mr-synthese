@@ -1277,10 +1277,13 @@ function LabScreen({player, onBack, onStartLab, onPlayers}) {
   );
 }
 
-function LabPlayersScreen({onBack}) {
+function LabPlayersScreen({onBack, player}) {
   const [users, setUsers] = useState([]);
-  const [resetTarget, setResetTarget] = useState(null); // nom du joueur à confirmer
+  const [resetTarget, setResetTarget] = useState(null);
   const [resetting, setResetting] = useState(false);
+  const [editTarget, setEditTarget] = useState(null); // joueur en cours d'édition
+  const [editValues, setEditValues] = useState({});
+  const canEdit = player && player.name.toLowerCase() === "matys";
   useEffect(()=>{
     if (!db) return;
     const ref = db.ref("users");
@@ -1303,6 +1306,25 @@ function LabPlayersScreen({onBack}) {
       wins:0, gamesPlayed:0, streak:0, bestStreak:0,
       winsEasy:0, winsMedium:0, winsNormal:0
     }).finally(()=>{ setResetting(false); setResetTarget(null); });
+  };
+
+  const startEdit = (u) => {
+    setEditTarget(u.name);
+    setEditValues({
+      wins: u.wins||0,
+      gamesPlayed: u.gamesPlayed||0,
+      streak: u.streak||0,
+      bestStreak: u.bestStreak||0,
+      winsEasy: u.winsEasy||0,
+      winsMedium: u.winsMedium||0,
+      winsNormal: u.winsNormal||0,
+    });
+  };
+
+  const saveEdit = (name) => {
+    const parsed = {};
+    Object.entries(editValues).forEach(([k,v])=>{ parsed[k] = Math.max(0, parseInt(v)||0); });
+    db.ref("users/"+name).update(parsed).then(()=>{ setEditTarget(null); });
   };
 
   return (
@@ -1346,21 +1368,57 @@ function LabPlayersScreen({onBack}) {
                       <div style={{fontSize:"0.68rem",color:"rgba(240,232,200,0.42)",textTransform:"uppercase"}}>Record</div>
                     </div>
                   </div>
-                  {!isTarget && (
-                    <button onClick={()=>setResetTarget(u.name)} style={{width:"100%",padding:"0.5rem",background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.35)",borderRadius:8,color:"rgba(255,120,120,0.85)",fontSize:"0.78rem",cursor:"pointer",fontWeight:700}}>
-                      🗑️ Réinitialiser les stats
-                    </button>
-                  )}
-                  {isTarget && (
+                  {canEdit && editTarget===u.name ? (
+                    <div>
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:"0.4rem",marginBottom:"0.6rem"}}>
+                        {[
+                          {key:"wins",label:"Victoires"},
+                          {key:"gamesPlayed",label:"Parties"},
+                          {key:"streak",label:"Série"},
+                          {key:"bestStreak",label:"Record"},
+                          {key:"winsEasy",label:"Wins Facile"},
+                          {key:"winsMedium",label:"Wins Moyen"},
+                          {key:"winsNormal",label:"Wins Normal"},
+                        ].map(f=>(
+                          <div key={f.key} style={{background:"rgba(0,0,0,0.25)",borderRadius:8,padding:"0.4rem 0.5rem"}}>
+                            <div style={{fontSize:"0.62rem",color:"rgba(240,232,200,0.4)",marginBottom:2}}>{f.label}</div>
+                            <input
+                              type="number" min="0"
+                              value={editValues[f.key]??0}
+                              onChange={e=>setEditValues(v=>({...v,[f.key]:e.target.value}))}
+                              style={{width:"100%",background:"rgba(255,255,255,0.08)",border:"1px solid rgba(247,201,72,0.35)",borderRadius:5,color:"#f7c948",padding:"0.2rem 0.3rem",fontSize:"0.82rem",fontWeight:700}}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{display:"flex",gap:"0.4rem"}}>
+                        <button onClick={()=>saveEdit(u.name)} style={{flex:1,padding:"0.5rem",background:"rgba(125,224,138,0.2)",border:"1px solid rgba(125,224,138,0.5)",borderRadius:8,color:"#7de08a",fontSize:"0.78rem",cursor:"pointer",fontWeight:900}}>
+                          ✅ Sauvegarder
+                        </button>
+                        <button onClick={()=>setEditTarget(null)} style={{flex:1,padding:"0.5rem",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,color:"rgba(240,232,200,0.6)",fontSize:"0.78rem",cursor:"pointer"}}>
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  ) : canEdit && !isTarget ? (
+                    <div style={{display:"flex",gap:"0.4rem"}}>
+                      <button onClick={()=>startEdit(u)} style={{flex:1,padding:"0.5rem",background:"rgba(92,200,224,0.1)",border:"1px solid rgba(92,200,224,0.35)",borderRadius:8,color:"rgba(92,200,224,0.85)",fontSize:"0.78rem",cursor:"pointer",fontWeight:700}}>
+                        ✏️ Modifier
+                      </button>
+                      <button onClick={()=>setResetTarget(u.name)} style={{flex:1,padding:"0.5rem",background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.35)",borderRadius:8,color:"rgba(255,120,120,0.85)",fontSize:"0.78rem",cursor:"pointer",fontWeight:700}}>
+                        🗑️ Reset
+                      </button>
+                    </div>
+                  ) : canEdit && isTarget ? (
                     <div style={{display:"flex",gap:"0.5rem"}}>
                       <button onClick={()=>resetStats(u.name)} disabled={resetting} style={{flex:1,padding:"0.5rem",background:"rgba(255,60,60,0.25)",border:"1px solid rgba(255,60,60,0.6)",borderRadius:8,color:"#ff6060",fontSize:"0.78rem",cursor:"pointer",fontWeight:900}}>
-                        {resetting?"...":"Confirmer"}
+                        {resetting?"...":"Confirmer reset"}
                       </button>
                       <button onClick={()=>setResetTarget(null)} style={{flex:1,padding:"0.5rem",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:8,color:"rgba(240,232,200,0.6)",fontSize:"0.78rem",cursor:"pointer"}}>
                         Annuler
                       </button>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               );
             })}
@@ -3407,7 +3465,7 @@ function App() {
   if (screen==="login")    return <LoginScreen onLogin={handleLogin}/>;
   if (screen==="profile")  return <ProfileScreen player={player} savePlayer={savePlayer} onContinue={()=>setScreen("lobby")} onLab={()=>setScreen("lab")}/>;
   if (screen==="lab")      return <LabScreen player={player} onBack={()=>setScreen("profile")} onStartLab={startLabGame} onPlayers={()=>setScreen("labPlayers")}/>;
-  if (screen==="labPlayers") return <LabPlayersScreen onBack={()=>setScreen("lab")}/>;
+  if (screen==="labPlayers") return <LabPlayersScreen onBack={()=>setScreen("lab")} player={player}/>;
   if (screen==="lobby")    return <>{<LobbyScreen player={player} onProfile={()=>setScreen("profile")} onCreate={handleCreate} onJoin={handleJoin} onWords={()=>setScreen("words")} allUsers={allUsers} lastSessionSummary={lastSessionSummary}/>}{invite && Date.now()-inviteDismissed>5000 && <InvitePopup invite={invite} player={player} onJoin={(code)=>{setInvite(null);setInviteDismissed(Date.now());handleJoin(code);}} onDismiss={()=>{setInviteDismissed(Date.now());setInvite(null);}}/>}</>;
   if (screen==="words")    return <WordsScreen onBack={()=>setScreen("lobby")} player={player} wordLists={wordLists} wordSuggestions={wordSuggestions} onSuggestWord={handleSuggestWord} onVoteSuggestion={handleVoteSuggestion}/>;
   if (screen==="waiting")  return <WaitingScreen sessionCode={sessionCode} sessionData={sessionData} player={player} onStart={handleStart} onLeave={handleLeave} onConfigChange={handleConfigChange}/>;
